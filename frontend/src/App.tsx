@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { enregistrerVisite } from './api/client'
 import AssistantAide from './components/AssistantAide'
 import Accueil from './pages/Accueil'
@@ -32,10 +32,18 @@ function useTheme() {
 
 export default function App() {
   const [theme, setTheme] = useTheme()
+  const [menuOuvert, setMenuOuvert] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     enregistrerVisite()
   }, [])
+
+  // Referme le menu mobile dès qu'on navigue vers une nouvelle page (clic sur un lien,
+  // bouton retour du navigateur...) plutôt que d'ajouter un onClick sur chaque NavLink.
+  useEffect(() => {
+    setMenuOuvert(false)
+  }, [location.pathname])
 
   return (
     <div className="app">
@@ -43,7 +51,15 @@ export default function App() {
         <NavLink to="/" className="brand">
           ☕ iaeasy
         </NavLink>
-        <nav>
+        <button
+          className="menu-toggle"
+          onClick={() => setMenuOuvert((v) => !v)}
+          aria-label={menuOuvert ? 'Fermer le menu' : 'Ouvrir le menu'}
+          aria-expanded={menuOuvert}
+        >
+          {menuOuvert ? '✕' : '☰'}
+        </button>
+        <nav className={menuOuvert ? 'ouvert' : ''}>
           <NavLink to="/catalogue">Catalogue</NavLink>
           <NavLink to="/entrainement">Entraînement</NavLink>
           <NavLink to="/parcours">Parcours</NavLink>
