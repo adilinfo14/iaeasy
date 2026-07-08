@@ -118,6 +118,12 @@ main {
   margin: 0 auto;
 }
 
+/* Cette page affiche un tableau à 4 colonnes denses (cahier de test) : la largeur de page
+   par défaut le rend cramé/tronqué sur un grand écran, d'où un plafond plus généreux ici. */
+.page-strategie-test {
+  max-width: 1600px;
+}
+
 .page h1 {
   margin-bottom: 0.3rem;
 }
