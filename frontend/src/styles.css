@@ -952,3 +952,109 @@ button:disabled {
     justify-self: center;
   }
 }
+
+/* --- Glossaire --- */
+.glossaire-recherche {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.glossaire-categorie {
+  margin-bottom: 1.8rem;
+}
+
+.glossaire-categorie h3 {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.glossaire-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem;
+}
+
+.glossaire-carte {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.glossaire-carte h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.92rem;
+  color: var(--fg);
+}
+
+.glossaire-carte p {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin: 0 0 0.4rem;
+}
+
+.glossaire-ou-voir {
+  font-size: 0.78rem !important;
+  font-style: italic;
+}
+
+/* --- Composant Terme (info-bulle glossaire réutilisable) --- */
+.terme-glossaire {
+  position: relative;
+  display: inline-block;
+}
+
+.terme-declencheur {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.terme-declencheur sup {
+  color: var(--accent);
+  margin-left: 0.1rem;
+}
+
+.terme-popover {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  margin-top: 0.4rem;
+  width: 280px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--fg);
+  white-space: normal;
+}
+
+.terme-popover strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--accent);
+}
+
+.terme-popover .terme-ou {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--fg-muted);
+}

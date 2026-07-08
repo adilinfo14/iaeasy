@@ -134,3 +134,8 @@ export async function debloquerBrique(id: string) {
   const r = await fetch(`${BASE}/progress/debloquer/${id}`, { method: 'POST' })
   return r.json()
 }
+
+export async function listerGlossaire() {
+  const r = await fetch(`${BASE}/glossaire`)
+  return r.json()
+}

@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { executerGraphe, listerComposants, listerTemplates } from '../api/client'
 import BrickCanvas, { type BrickCanvasHandle } from '../components/BrickCanvas'
+import Terme from '../components/Terme'
+
+const TERME_PAR_COMPOSANT: Record<string, string> = {
+  chunking: 'Chunking',
+  base_vectorielle: 'Embedding',
+  llm_agent: 'LLM',
+  outil_mcp: 'MCP',
+  agent_unique: 'Agent',
+  multi_agent: 'Multi-agent',
+  llm_seul: 'LLM',
+  rag: 'RAG',
+  moderation: 'Modération',
+  verification: 'Vérificateur',
+}
 
 function fusionnerExemple(template: any, exemple: any) {
   const nodes = template.nodes.map((n: any) => {
@@ -155,7 +169,12 @@ export default function Constructeur() {
       {composantAffiche && (
         <div className="explication-bloc">
           <h4>
-            {composantAffiche.icone} {composantAffiche.titre}
+            {composantAffiche.icone}{' '}
+            {TERME_PAR_COMPOSANT[composantAffiche.id] ? (
+              <Terme nom={TERME_PAR_COMPOSANT[composantAffiche.id]}>{composantAffiche.titre}</Terme>
+            ) : (
+              composantAffiche.titre
+            )}
           </h4>
           <p>{composantAffiche.description}</p>
           <p className="texte-muted">
