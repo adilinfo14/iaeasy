@@ -61,6 +61,35 @@ def _toy_serie_ca() -> tuple[list[int], list[float]]:
     return mois, (tendance + bruit).tolist()
 
 
+EXEMPLES_TEST = {
+    "sentiment_camembert": [
+        "Le technicien a été très professionnel et à l'écoute.",
+        "Toujours aucune réponse après 2 semaines, c'est inadmissible.",
+        "Prix correct mais le délai était vraiment long.",
+        "Je recommande sans hésiter, service impeccable.",
+        "Le rendez-vous a encore été annulé sans prévenir.",
+        "Équipe efficace, chantier terminé avant la date prévue.",
+        "Facturation confuse, plusieurs erreurs à corriger.",
+        "Résultat parfait, exactement ce que je voulais.",
+        "Un conseiller désagréable qui ne répond pas aux questions.",
+        "Très satisfait du suivi après les travaux.",
+    ],
+    "spam_logreg": [
+        "Cliquez ici pour gagner un iPhone gratuitement maintenant.",
+        "Bonjour, voici le compte-rendu de la réunion de ce matin.",
+        "Urgent : votre compte sera fermé, confirmez vos données ici.",
+        "Merci de valider le devis ci-joint avant vendredi.",
+        "Vous avez gagné 10000€, réclamez votre prix immédiatement.",
+        "Le rendez-vous chantier est confirmé pour lundi 9h.",
+        "Réduction de 90% aujourd'hui seulement, cliquez vite.",
+        "Voici la facture corrigée suite à notre échange.",
+        "Votre colis est bloqué, payez 1,99€ pour le débloquer ici.",
+        "Je vous transmets le planning de la semaine prochaine.",
+    ],
+    "prevision_ca": [19, 20, 21, 22, 24, 26, 28, 30, 15, 25],
+}
+
+
 def lister_scenarios() -> list[dict]:
     return [{"id": sid, **infos} for sid, infos in SCENARIOS.items()]
 
@@ -69,12 +98,12 @@ def apercu_donnees(scenario_id: str) -> dict:
     if scenario_id == "sentiment_camembert":
         textes, labels = _lire_csv(_DATASET_SENTIMENT)
         lignes = [{"texte": t, "label": "positif" if lbl == 1 else "négatif"} for t, lbl in zip(textes, labels)]
-        return {"colonnes": ["texte", "label"], "lignes": lignes[:8], "total": len(lignes)}
+        return {"colonnes": ["texte", "label"], "lignes": lignes[:10], "total": len(lignes)}
 
     if scenario_id == "spam_logreg":
         textes, labels = _lire_csv(_DATASET_SPAM)
         lignes = [{"texte": t, "label": "spam" if lbl == 1 else "légitime"} for t, lbl in zip(textes, labels)]
-        return {"colonnes": ["texte", "label"], "lignes": lignes[:8], "total": len(lignes)}
+        return {"colonnes": ["texte", "label"], "lignes": lignes[:10], "total": len(lignes)}
 
     if scenario_id == "prevision_ca":
         mois, ca = _toy_serie_ca()
@@ -194,9 +223,57 @@ _ENTRAINEURS = {
 }
 
 
+def _evaluer_avant(scenario_id: str) -> list[dict]:
+    exemples = EXEMPLES_TEST[scenario_id]
+
+    if scenario_id == "sentiment_camembert":
+        import torch
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained(_BASE_MODEL_SENTIMENT)
+        modele = AutoModelForSequenceClassification.from_pretrained(_BASE_MODEL_SENTIMENT, num_labels=2)
+        modele.eval()
+
+        resultats = []
+        for texte in exemples:
+            entrees = tokenizer(texte, return_tensors="pt", truncation=True, max_length=64)
+            with torch.no_grad():
+                logits = modele(**entrees).logits
+            proba = torch.softmax(logits, dim=1)[0]
+            etiquette = "positif" if proba[1] > proba[0] else "négatif"
+            resultats.append({"entree": texte, "prediction": etiquette, "confiance": round(float(proba.max()), 3)})
+        return resultats
+
+    if scenario_id == "spam_logreg":
+        return [
+            {"entree": texte, "prediction": "indéterminé (poids à zéro, rien n'a encore été appris)", "confiance": 0.5}
+            for texte in exemples
+        ]
+
+    if scenario_id == "prevision_ca":
+        _, ca = _toy_serie_ca()
+        y_mean_str = f"{np.mean(ca):,.0f}".replace(",", " ")
+        return [
+            {
+                "entree": f"Mois {m}",
+                "prediction": f"{y_mean_str} € (moyenne globale, aucune tendance apprise)",
+                "confiance": None,
+            }
+            for m in exemples
+        ]
+
+    raise ValueError(f"Scénario inconnu : {scenario_id}")
+
+
+def _evaluer_apres(job_id: str, scenario_id: str) -> list[dict]:
+    exemples = EXEMPLES_TEST[scenario_id]
+    return [tester_modele(job_id, str(e)) for e in exemples]
+
+
 def _entrainer(job_id: str, scenario_id: str) -> None:
     try:
         _ENTRAINEURS[scenario_id](job_id)
+        _jobs[job_id]["apres"] = _evaluer_apres(job_id, scenario_id)
         _jobs[job_id]["status"] = "termine"
     except Exception as exc:  # noqa: BLE001 — l'erreur doit remonter côté IHM, pas planter le thread
         _jobs[job_id]["status"] = "erreur"
@@ -207,7 +284,15 @@ def demarrer_entrainement(scenario_id: str) -> str:
     if scenario_id not in SCENARIOS:
         raise ValueError(f"Scénario inconnu : {scenario_id}")
     job_id = uuid.uuid4().hex[:8]
-    _jobs[job_id] = {"status": "en_cours", "history": [], "erreur": None, "scenario_id": scenario_id}
+    avant = _evaluer_avant(scenario_id)
+    _jobs[job_id] = {
+        "status": "en_cours",
+        "history": [],
+        "erreur": None,
+        "scenario_id": scenario_id,
+        "avant": avant,
+        "apres": None,
+    }
     threading.Thread(target=_entrainer, args=(job_id, scenario_id), daemon=True).start()
     return job_id
 

@@ -28,6 +28,11 @@ export async function apercuDonnees(scenarioId: string) {
   return r.json()
 }
 
+export async function obtenirJobEntrainement(jobId: string) {
+  const r = await fetch(`${BASE}/training/${jobId}`)
+  return r.json()
+}
+
 export async function demarrerEntrainement(scenarioId: string) {
   const r = await fetch(`${BASE}/training/start`, {
     method: 'POST',

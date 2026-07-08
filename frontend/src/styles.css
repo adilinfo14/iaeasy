@@ -11,6 +11,43 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* --- Thème "doux" : crème / marron, plus chaleureux et invitant --- */
+:root[data-theme='doux'] {
+  --bg: #f7efe1;
+  --bg-alt: #eee0c9;
+  --fg: #4a3324;
+  --fg-muted: #8a7360;
+  --accent: #b06a35;
+  --accent-soft: #e6cca4;
+  --border: #ddc9a6;
+  --danger: #b8462f;
+  --success: #6f8a4e;
+}
+
+:root[data-theme='doux'] body {
+  background: linear-gradient(180deg, #faf3e6 0%, #f3e6cd 100%);
+}
+
+:root[data-theme='doux'] .module-carte:hover,
+:root[data-theme='doux'] .model-card:hover {
+  box-shadow: 0 10px 24px -14px rgba(176, 106, 53, 0.35);
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -324,31 +361,75 @@ button:disabled {
 
 .templates-liste {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 0.8rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
+  align-items: start;
 }
 
 .template-carte {
-  text-align: left;
   background: var(--bg-alt);
   border: 1px solid var(--border);
   border-radius: 10px;
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.template-carte.ouverte {
+  border-color: var(--accent);
+}
+
+.template-entete {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--fg);
   padding: 0.8rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  color: var(--fg);
+  border-radius: 0;
 }
 
-.template-carte:hover {
-  border-color: var(--accent);
+.template-entete:hover {
+  filter: none;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .template-carte span {
   font-size: 0.8rem;
   color: var(--fg-muted);
   font-weight: 400;
+}
+
+.template-details {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.avantages-inconvenients {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.avantages-inconvenients h5 {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+}
+
+.avantages-inconvenients .liste-simple {
+  font-size: 0.82rem;
+  padding-left: 1rem;
+}
+
+@media (max-width: 600px) {
+  .avantages-inconvenients {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* --- Page d'accueil --- */
@@ -574,6 +655,16 @@ button:disabled {
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.72rem;
+}
+
+.cellule-avant {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.cellule-apres {
+  color: var(--success);
+  font-weight: 600;
 }
 
 .input-texte {

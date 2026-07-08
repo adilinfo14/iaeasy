@@ -8,6 +8,8 @@ MODELE_EMBED = "nomic-embed-text"
 
 _MINI_CORPUS_RAG = tools._MINI_CORPUS
 
+_MOTS_BLOQUES = ["pirater", "arnaque", "contourner la loi", "fabriquer une arme"]
+
 _TOOLS_OLLAMA_SCHEMA = [
     {
         "type": "function",
@@ -80,8 +82,9 @@ def _executer_outil(nom: str, arguments: dict) -> str:
 
 async def _handler_llm_seul(config: dict, contexte: dict, etapes: list[dict]) -> dict:
     prompt = config.get("prompt") or contexte.get("prompt") or "Explique en une phrase ce qu'est un agent IA."
-    reponse = await ollama.generate(MODELE_LLM, prompt)
-    etapes.append({"brique": "llm_seul", "detail": f"Prompt envoyé au LLM : « {prompt} »"})
+    modele = config.get("modele", MODELE_LLM)
+    reponse = await ollama.generate(modele, prompt)
+    etapes.append({"brique": "llm_seul", "detail": f"Prompt envoyé à {modele} : « {prompt} »"})
     contexte["derniere_reponse"] = reponse
     return contexte
 
@@ -142,6 +145,10 @@ async def _handler_outil_mcp(config: dict, contexte: dict, etapes: list[dict]) -
 
 async def _handler_agent_unique(config: dict, contexte: dict, etapes: list[dict]) -> dict:
     tache = config.get("prompt") or contexte.get("prompt") or "Combien font 12 fois (3+4) ?"
+    passages = contexte.get("passages_retrouves")
+    if passages:
+        tache = "Contexte documentaire disponible :\n" + "\n".join(passages) + f"\n\nTâche : {tache}"
+
     messages = [
         {
             "role": "system",
@@ -282,8 +289,12 @@ async def _handler_base_vectorielle(config: dict, contexte: dict, etapes: list[d
 
 
 async def _handler_llm_agent(config: dict, contexte: dict, etapes: list[dict]) -> dict:
+    if contexte.get("bloque"):
+        return contexte
+
     passages = contexte.get("passages_retrouves")
     requete = config.get("prompt") or contexte.get("prompt") or "Résume la situation."
+    modele = config.get("modele", MODELE_LLM)
 
     if passages:
         prompt_final = (
@@ -293,9 +304,78 @@ async def _handler_llm_agent(config: dict, contexte: dict, etapes: list[dict]) -
     else:
         prompt_final = requete
 
-    reponse = await ollama.generate(MODELE_LLM, prompt_final)
-    etapes.append({"brique": "llm_agent", "detail": "LLM interrogé avec le prompt final (augmenté si un retrieval a eu lieu)."})
+    reponse = await ollama.generate(modele, prompt_final)
+    etapes.append({"brique": "llm_agent", "detail": f"{modele} interrogé avec le prompt final (augmenté si un retrieval a eu lieu)."})
     contexte["derniere_reponse"] = reponse
+    return contexte
+
+
+async def _handler_comparateur(config: dict, contexte: dict, etapes: list[dict]) -> dict:
+    prompt = config.get("prompt") or contexte.get("prompt") or "Explique ce qu'est le RAG en une phrase."
+    modele_a = config.get("modele_a", "llama3.2:3b")
+    modele_b = config.get("modele_b", "qwen2.5:7b-instruct")
+
+    reponse_a = await ollama.generate(modele_a, prompt)
+    etapes.append({"brique": "comparateur", "detail": f"{modele_a} -> {reponse_a}"})
+    reponse_b = await ollama.generate(modele_b, prompt)
+    etapes.append({"brique": "comparateur", "detail": f"{modele_b} -> {reponse_b}"})
+
+    contexte["reponse_a"] = reponse_a
+    contexte["reponse_b"] = reponse_b
+    contexte["derniere_reponse"] = f"[{modele_a}] {reponse_a}\n\n[{modele_b}] {reponse_b}"
+    return contexte
+
+
+async def _handler_synthese_map_reduce(config: dict, contexte: dict, etapes: list[dict]) -> dict:
+    chunks = contexte.get("chunks") or _decouper_en_chunks(contexte.get("document", ""))
+    resumes_partiels = []
+    for i, chunk in enumerate(chunks):
+        resume = await ollama.generate(MODELE_LLM, f"Résume ce passage en une phrase courte :\n{chunk}")
+        resumes_partiels.append(resume)
+        etapes.append({"brique": "synthese_map_reduce", "detail": f"Résumé du morceau {i + 1}/{len(chunks)} : {resume}"})
+
+    synthese_finale = await ollama.generate(
+        MODELE_LLM,
+        "Synthétise ces résumés partiels en un seul paragraphe cohérent :\n" + "\n".join(resumes_partiels),
+    )
+    etapes.append({"brique": "synthese_map_reduce", "detail": "Synthèse finale des résumés partiels générée."})
+    contexte["derniere_reponse"] = synthese_finale
+    return contexte
+
+
+async def _handler_moderation(config: dict, contexte: dict, etapes: list[dict]) -> dict:
+    prompt = config.get("prompt") or contexte.get("prompt") or ""
+    prompt_minuscule = prompt.lower()
+    mot_bloque = next((m for m in _MOTS_BLOQUES if m in prompt_minuscule), None)
+
+    if mot_bloque:
+        etapes.append({"brique": "moderation", "detail": f"Requête bloquée (mot-clé détecté : « {mot_bloque} »)."})
+        contexte["bloque"] = True
+        contexte["derniere_reponse"] = "Désolé, je ne peux pas répondre à cette demande."
+    else:
+        etapes.append({"brique": "moderation", "detail": "Requête acceptée par le filtre de modération."})
+        contexte["bloque"] = False
+        contexte["prompt"] = prompt
+    return contexte
+
+
+async def _handler_verification(config: dict, contexte: dict, etapes: list[dict]) -> dict:
+    if contexte.get("bloque"):
+        return contexte
+
+    prompt = config.get("prompt") or contexte.get("prompt") or "Combien font 17 fois 23 ?"
+    brouillon = await ollama.generate(MODELE_LLM, prompt)
+    etapes.append({"brique": "verification", "detail": f"Brouillon de réponse : {brouillon}"})
+
+    verification_prompt = (
+        f"Question d'origine : {prompt}\nRéponse proposée : {brouillon}\n"
+        "Vérifie cette réponse (notamment les calculs et les faits). Si elle est correcte, "
+        "renvoie-la telle quelle. Si elle contient une erreur, corrige-la et explique brièvement pourquoi."
+    )
+    reponse_corrigee = await ollama.generate(MODELE_LLM, verification_prompt)
+    etapes.append({"brique": "verification", "detail": f"Réponse après vérification/correction : {reponse_corrigee}"})
+
+    contexte["derniere_reponse"] = reponse_corrigee
     return contexte
 
 
@@ -309,6 +389,10 @@ _HANDLERS = {
     "chunking": _handler_chunking,
     "base_vectorielle": _handler_base_vectorielle,
     "llm_agent": _handler_llm_agent,
+    "comparateur": _handler_comparateur,
+    "synthese_map_reduce": _handler_synthese_map_reduce,
+    "moderation": _handler_moderation,
+    "verification": _handler_verification,
 }
 
 

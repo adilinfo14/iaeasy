@@ -3,6 +3,7 @@ import {
   apercuDonnees,
   demarrerEntrainement,
   listerScenariosEntrainement,
+  obtenirJobEntrainement,
   suivreEntrainement,
   testerModeleEntraine,
 } from '../api/client'
@@ -18,6 +19,8 @@ export default function Entrainement() {
   const [statut, setStatut] = useState<Statut>('inactif')
   const [erreur, setErreur] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
+  const [avant, setAvant] = useState<any[] | null>(null)
+  const [apres, setApres] = useState<any[] | null>(null)
   const [testEntree, setTestEntree] = useState('')
   const [testResultat, setTestResultat] = useState<any>(null)
 
@@ -34,6 +37,8 @@ export default function Entrainement() {
     setStatut('inactif')
     setErreur(null)
     setJobId(null)
+    setAvant(null)
+    setApres(null)
     setTestResultat(null)
     setApercu(await apercuDonnees(id))
   }
@@ -43,15 +48,23 @@ export default function Entrainement() {
     setHistorique([])
     setErreur(null)
     setTestResultat(null)
+    setApres(null)
     setStatut('en_cours')
     const { job_id } = await demarrerEntrainement(scenarioId)
     setJobId(job_id)
+    const job = await obtenirJobEntrainement(job_id)
+    setAvant(job.avant)
+
     suivreEntrainement(
       job_id,
       (point) => setHistorique((h) => [...h, point]),
-      (fin) => {
+      async (fin) => {
         setStatut(fin.status === 'termine' ? 'termine' : 'erreur')
         if (fin.erreur) setErreur(fin.erreur)
+        if (fin.status === 'termine') {
+          const jobFinal = await obtenirJobEntrainement(job_id)
+          setApres(jobFinal.apres)
+        }
       },
     )
   }
@@ -73,8 +86,8 @@ export default function Entrainement() {
       <h1>Entraînement — comprendre la perte (loss)</h1>
       <p className="page-intro">
         Trois scénarios réels, trois familles de modèles différentes. Choisissez-en un pour voir
-        exactement quelles données servent à l'entraînement, avant de lancer et de tester le
-        résultat vous-même.
+        exactement quelles données servent à l'entraînement, avant de lancer et de comparer le
+        modèle avant/après sur une dizaine d'exemples.
       </p>
 
       <div className="filtres">
@@ -132,12 +145,44 @@ export default function Entrainement() {
       </button>
 
       {historique.length > 0 && <LossChart data={historique} />}
-      {statut === 'termine' && <p className="succes">Entraînement terminé — testez-le ci-dessous.</p>}
+      {statut === 'termine' && <p className="succes">Entraînement terminé — regarde l'avant/après ci-dessous.</p>}
       {erreur && <p className="erreur">{erreur}</p>}
+
+      {avant && (
+        <div className="explication-bloc">
+          <h4>Avant / après — {avant.length} exemples jamais vus par le modèle pendant l'entraînement</h4>
+          <div className="table-scroll">
+            <table className="table-donnees">
+              <thead>
+                <tr>
+                  <th>Entrée</th>
+                  <th>Avant entraînement</th>
+                  <th>Après entraînement</th>
+                </tr>
+              </thead>
+              <tbody>
+                {avant.map((a, i) => {
+                  const ap = apres?.[i]
+                  return (
+                    <tr key={i}>
+                      <td>{a.entree}</td>
+                      <td className="cellule-avant">{a.prediction}</td>
+                      <td className="cellule-apres">{ap ? ap.prediction : '…'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {!apres && statut === 'en_cours' && (
+            <p className="texte-muted">La colonne « après » se remplit une fois l'entraînement terminé.</p>
+          )}
+        </div>
+      )}
 
       {statut === 'termine' && jobId && (
         <div className="explication-bloc">
-          <h4>Testez le modèle que vous venez d'entraîner</h4>
+          <h4>Teste le modèle avec ta propre entrée</h4>
           <input
             className="input-texte"
             value={testEntree}
