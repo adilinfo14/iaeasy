@@ -62,7 +62,7 @@ export default function ModelDetailDrawer({ modele, onFermer }: Props) {
                 </button>
               ))}
             </div>
-            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={3} />
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={8} />
           </>
         )}
 

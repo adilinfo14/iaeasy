@@ -6,6 +6,7 @@ import Catalogue from './pages/Catalogue'
 import Constructeur from './pages/Constructeur'
 import Entrainement from './pages/Entrainement'
 import Parcours from './pages/Parcours'
+import StrategieTest from './pages/StrategieTest'
 
 function useTheme() {
   const [theme, setTheme] = useState<'sombre' | 'doux'>(
@@ -42,6 +43,7 @@ export default function App() {
           <NavLink to="/entrainement">Entraînement</NavLink>
           <NavLink to="/parcours">Parcours</NavLink>
           <NavLink to="/constructeur">Constructeur</NavLink>
+          <NavLink to="/strategie-test">Stratégie de tests</NavLink>
         </nav>
         <button
           className="theme-toggle"
@@ -59,6 +61,7 @@ export default function App() {
           <Route path="/entrainement" element={<Entrainement />} />
           <Route path="/parcours" element={<Parcours />} />
           <Route path="/constructeur" element={<Constructeur />} />
+          <Route path="/strategie-test" element={<StrategieTest />} />
         </Routes>
       </main>
     </div>

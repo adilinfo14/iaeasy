@@ -120,6 +120,11 @@ export async function listerTemplates() {
   return r.json()
 }
 
+export async function listerStrategiesTest() {
+  const r = await fetch(`${BASE}/strategie-test`)
+  return r.json()
+}
+
 export async function lireProgression() {
   const r = await fetch(`${BASE}/progress`)
   return r.json()

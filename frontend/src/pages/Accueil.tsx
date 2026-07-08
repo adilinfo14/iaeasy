@@ -28,6 +28,12 @@ const MODULES = [
     titre: 'Constructeur',
     pitch: "Mode architecte : assemble un vrai RAG, un agent, un pipeline multi-agent.",
   },
+  {
+    to: '/strategie-test',
+    icone: '🧪',
+    titre: 'Stratégie de tests',
+    pitch: "Comment vérifier sérieusement chaque famille de modèle — cahiers de test à réutiliser.",
+  },
 ]
 
 export default function Accueil() {

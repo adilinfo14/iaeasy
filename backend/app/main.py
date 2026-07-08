@@ -9,6 +9,7 @@ from .agents.router import router as agents_router
 from .catalogue.router import router as catalogue_router
 from .progress.router import router as progress_router
 from .stats.router import router as stats_router
+from .strategie_test.router import router as strategie_test_router
 from .training.router import router as training_router
 
 app = FastAPI(title="iaeasy — plateforme pédagogique IA")
@@ -25,6 +26,7 @@ app.include_router(training_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
 app.include_router(progress_router, prefix="/api")
 app.include_router(stats_router, prefix="/api")
+app.include_router(strategie_test_router, prefix="/api")
 
 
 @app.get("/api/health")
