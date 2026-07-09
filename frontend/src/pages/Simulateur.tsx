@@ -150,12 +150,13 @@ export default function Simulateur() {
     <div className="page page-simulateur">
       <h1>⚖️ Simulateur coût / latence des modèles</h1>
       <p className="page-intro">
-        Le même prompt est envoyé, l'un après l'autre, à tous les modèles génératifs (LLM)
-        disponibles sur ce serveur — les modèles d'embeddings, de vision ou de classification
-        classique ne sont pas comparables sur cet axe (ils ne répondent pas à un prompt en texte
-        libre). La <strong>durée est une vraie mesure</strong>, prise en direct sur cette machine —
-        pas une estimation. L'énergie affichée, elle, est une <strong>approximation illustrative</strong>{' '}
-        proportionnelle au nombre de paramètres, pas une mesure réelle de consommation.
+        Le Simulateur soumet un même prompt, successivement, à l'ensemble des modèles génératifs
+        sélectionnés — les modèles d'embeddings, de vision ou de classification classique échappant
+        par nature à cette comparaison, puisqu'ils ne répondent pas à un texte libre. La{' '}
+        <strong>durée affichée constitue une mesure réelle</strong>, effectuée en direct sur cette
+        machine, quand l'énergie demeure une <strong>approximation illustrative</strong>,
+        proportionnelle au nombre de paramètres de chaque modèle plutôt qu'une consommation
+        véritablement observée.
       </p>
 
       {modeles.length > 0 && (

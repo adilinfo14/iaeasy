@@ -102,16 +102,17 @@ export default function Accueil() {
 
   return (
     <div className="page page-accueil">
-      <h1>☕ iaeasy — apprends l'IA en la construisant</h1>
+      <h1>☕ iaeasy — apprendre l'IA en la construisant</h1>
       <p className="page-intro">
-        Une plateforme pédagogique pour comprendre l'IA en la manipulant réellement, pas en lisant
-        un énième article de vulgarisation. Conçue pour toute personne curieuse, sans bagage
-        technique ni compte à créer ailleurs — étudiant, artisan, salarié, ou juste curieux de
-        savoir ce qu'il y a vraiment derrière un chatbot : essaie des dizaines de modèles différents
-        (pas seulement des chatbots), regarde une vraie courbe d'apprentissage descendre pendant un
-        entraînement, puis assemble ta propre architecture d'agent brique par brique. Le tout tourne
-        en local sur un serveur personnel avec des modèles open-source : 100% souverain, aucune
-        donnée envoyée à un service cloud tiers.
+        Née de la conviction qu'on ne comprend véritablement l'intelligence artificielle qu'en la
+        manipulant soi-même, iaeasy s'attache à porter une pédagogie à la fois exigeante et
+        accessible, ouverte à toute personne curieuse — étudiante, artisan, salariée, ou simplement
+        désireuse de savoir ce qui se cache derrière un chatbot. La plateforme conjugue rigueur
+        technique et souveraineté numérique : hébergée sur un serveur personnel et fondée
+        exclusivement sur des modèles ouverts, elle ne transmet jamais la moindre donnée à un
+        service tiers. Elle invite à essayer des dizaines de modèles différents, à observer une
+        véritable courbe d'apprentissage se former sous ses yeux, puis à assembler, brique par
+        brique, sa propre architecture d'agent.
       </p>
 
       <div className="progression-globale">

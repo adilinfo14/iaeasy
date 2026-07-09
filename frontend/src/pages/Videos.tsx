@@ -13,9 +13,10 @@ export default function Videos() {
     <div className="page page-videos">
       <h1>🎬 Vidéos</h1>
       <p className="page-intro">
-        Des extraits de conférences ou de formations sur l'IA, avec une explication de ce qu'on y
-        voit en français simple — un schéma en anglais peut être parfaitement clair pour son auteur
-        et complètement opaque pour vous.
+        Cette rubrique réunit des extraits de conférences consacrées à l'intelligence artificielle,
+        chacun accompagné d'une explication en français simple de ce qu'il donne à voir — un schéma
+        conçu en anglais pouvant se révéler parfaitement limpide pour son auteur et tout à fait
+        opaque pour qui le découvre.
       </p>
 
       {videos.map((v) => (

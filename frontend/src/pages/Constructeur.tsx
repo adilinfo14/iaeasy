@@ -121,11 +121,12 @@ export default function Constructeur() {
     <div className="page page-constructeur">
       <h1>Constructeur d'architecture</h1>
       <p className="page-intro">
-        Le mode « architecte » : {templates.length > 0 ? templates.length : 'plusieurs'} modèles
-        d'architecture réels, chacun avec ses avantages et ses inconvénients. Ouvrez-en un,
-        choisissez un exemple pour le charger sur le canvas, puis
-        <strong> cliquez sur chaque nœud pour voir et modifier ce qui lui est vraiment envoyé</strong>{' '}
-        avant d'exécuter et d'inspecter ce que produit chaque étape intermédiaire.
+        Le Constructeur propose un véritable mode architecte : {templates.length > 0 ? templates.length : 'plusieurs'} modèles
+        d'architecture réels, organisés en cinq familles, chacun assorti de ses avantages et de ses
+        limites. Ouvrir un modèle, en charger un exemple sur le canevas, puis
+        <strong> inspecter nœud par nœud ce qui lui est effectivement transmis</strong>{' '}
+        avant d'exécuter le graphe et d'observer ce que produit chaque étape intermédiaire : telle
+        est la démarche que ce module invite à suivre.
       </p>
 
       <div className="constructeur-layout">

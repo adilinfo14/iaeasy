@@ -50,8 +50,9 @@ export default function Avis() {
     <div className="page page-avis">
       <h1>⭐ Votre avis sur iaeasy</h1>
       <p className="page-intro">
-        Ce site s'améliore avec les retours de ses visiteurs. Une note en 2 secondes, un commentaire
-        en plus si vous avez une minute — tout est visible ci-dessous, sans compte à créer.
+        Ce site s'enrichit des retours de ceux qui le parcourent : une note suffit, en quelques
+        secondes, et un commentaire, lorsque le temps le permet, vient utilement la compléter —
+        l'ensemble demeurant visible ci-dessous, sans qu'aucun compte ne soit nécessaire.
       </p>
 
       <div className="avis-formulaire">

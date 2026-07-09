@@ -21,11 +21,11 @@ export default function StrategieTest() {
     <div className="page page-strategie-test">
       <h1>☕ Stratégie de tests par famille de modèle</h1>
       <p className="page-intro">
-        Un modèle qui répond avec assurance n'est pas forcément un modèle qui répond juste. Pour
-        chacune des {strategies.length || 15} familles du catalogue, voici comment la vérifier
-        sérieusement : les catégories de test à couvrir, les métriques à suivre, le piège le plus
-        fréquent, et un cahier de test concret (une centaine de cas par famille) dont vous pouvez
-        vous inspirer directement.
+        L'assurance d'une réponse ne garantit jamais son exactitude. Pour chacune des{' '}
+        {strategies.length || 21} familles que réunit le Catalogue, cette rubrique détaille la
+        méthodologie de vérification qui s'impose : catégories de test à couvrir, métriques à
+        suivre, piège le plus fréquent, et un cahier de test concret — de l'ordre d'une centaine de
+        cas par famille — directement réutilisable.
       </p>
 
       <div className="templates-liste">

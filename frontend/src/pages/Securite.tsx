@@ -17,9 +17,11 @@ export default function Securite() {
     <div className="page page-securite">
       <h1>🛡️ Sécurité des applications IA</h1>
       <p className="page-intro">
-        Un agent IA n'est pas qu'une source d'erreurs de raisonnement : c'est aussi une nouvelle
-        surface d'attaque, avec ses propres risques. Les {risques.length || 10} catégories ci-dessous
-        couvrent l'essentiel, avec pour chacune ce qu'il faut mettre en place concrètement.
+        Un agent d'intelligence artificielle ne se limite pas à commettre, à l'occasion, des
+        erreurs de raisonnement : il constitue également une surface d'attaque à part entière,
+        porteuse de risques qui lui sont propres. Les {risques.length || 10} catégories qui suivent
+        en couvrent l'essentiel, chacune assortie des mesures concrètes qu'il convient de mettre en
+        œuvre.
       </p>
       {source && <p className="texte-muted video-source">{source}</p>}
 

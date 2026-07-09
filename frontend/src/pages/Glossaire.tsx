@@ -30,9 +30,11 @@ export default function Glossaire() {
     <div className="page page-glossaire">
       <h1>📖 Glossaire IA — expliqué simplement</h1>
       <p className="page-intro">
-        Chaque terme technique du site en langage courant, sans jargon. Retrouvez aussi ces
-        définitions directement au survol du symbole <strong>ⓘ</strong> à côté d'un mot technique
-        dans le Catalogue et le Constructeur.
+        Le Glossaire s'attache à restituer, en langage courant et sans jargon superflu, chacun des
+        termes techniques employés sur ce site — qu'il s'agisse d'une notion générale
+        d'intelligence artificielle, d'une famille de modèles ou d'un modèle du Catalogue pris
+        individuellement. Ces définitions demeurent également accessibles au survol du symbole{' '}
+        <strong>ⓘ</strong>, partout où un terme technique apparaît.
       </p>
 
       <input

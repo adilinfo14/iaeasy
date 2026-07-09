@@ -85,9 +85,11 @@ export default function Entrainement() {
     <div className="page">
       <h1>Entraînement — comprendre la perte (loss)</h1>
       <p className="page-intro">
-        Trois scénarios réels, trois familles de modèles différentes. Choisissez-en un pour voir
-        exactement quelles données servent à l'entraînement, avant de lancer et de comparer le
-        modèle avant/après sur une dizaine d'exemples.
+        Le module Entraînement s'attache à rendre visible ce qui demeure, la plupart du temps,
+        invisible : la manière dont un modèle apprend. Trois scénarios réels, relevant chacun d'une
+        famille d'algorithme différente, permettent d'observer précisément les données mobilisées,
+        avant de comparer, sur une dizaine d'exemples, le comportement du modèle avant et après son
+        entraînement.
       </p>
 
       <div className="filtres">

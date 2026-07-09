@@ -202,9 +202,11 @@ export default function Parcours() {
     <div className="page">
       <h1>Parcours — construis ton assistant, brique par brique</h1>
       <p className="page-intro">
-        Chaque étape ajoute une capacité concrète à l'assistant que tu construis, et débloque la
-        brique suivante. Choisis le secteur qui te parle le plus ci-dessous — l'histoire change,
-        mais ce que chaque brique démontre techniquement reste exactement le même.
+        Le Parcours fait progresser, étape après étape, la construction d'un assistant
+        conversationnel : chaque brique ajoute une capacité concrète et en débloque une nouvelle.
+        Cinq secteurs peuvent être choisis ci-dessous pour ancrer cette progression dans un contexte
+        professionnel réel — BTP, banque, agriculture, ressources humaines ou e-commerce — sans que
+        ce choix ne modifie jamais ce que chaque brique démontre sur le plan technique.
       </p>
 
       {casDisponibles.length > 0 && (

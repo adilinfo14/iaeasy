@@ -19,9 +19,9 @@ export default function Metiers() {
     <div className="page page-metiers">
       <h1>🧭 L'IA dans mon métier</h1>
       <p className="page-intro">
-        Pas de jargon, pas de promesse abstraite : {totalCasUsage || 48} cas d'usage concrets déjà
-        présents sur ce site, classés par secteur puis par métier, avec un lien direct pour aller
-        les essayer soi-même.
+        Sans jargon ni promesse abstraite, cette rubrique réunit {totalCasUsage || 48} cas d'usage
+        concrets, déjà présents sur le site et classés par secteur puis par métier, chacun assorti
+        d'un lien permettant de l'essayer directement.
       </p>
 
       <div className="exemples-categories">

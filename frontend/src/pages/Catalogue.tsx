@@ -21,7 +21,7 @@ export default function Catalogue() {
       <h1>Catalogue de modèles</h1>
       <p className="page-intro">
         {modeles.length > 0
-          ? `${modeles.length} modèles, ${nombreFamilles} familles d'IA différentes (pas seulement des chatbots) : à chaque fiche son secteur, sa description pédagogique, un lien pour l'installer chez soi et des idées d'usage pour s'en inspirer, en plus d'un cas d'usage à essayer en direct.`
+          ? `Le Catalogue réunit ${modeles.length} modèles répartis en ${nombreFamilles} familles d'intelligence artificielle, bien au-delà des seuls agents conversationnels. Chaque fiche s'attache à restituer, pour le modèle qu'elle présente, son secteur d'application, une description pédagogique, un lien vers son installation, des idées d'usage inspirantes et un cas concret à essayer en direct.`
           : 'Chargement du catalogue…'}
       </p>
 
