@@ -287,6 +287,9 @@ export default function Simulateur() {
           setEnCours(false)
           if (fin.status === 'erreur') setErreur(fin.erreur || 'Erreur pendant la comparaison')
         },
+        // Le flux SSE rejoue tout depuis le début à chaque reconnexion (utile si l'onglet a été mis
+        // en arrière-plan sur mobile) — repartir de zéro ici évite des résultats dupliqués.
+        () => setResultat((prev: any) => ({ ...prev, resultats: [] })),
       )
     } catch (e: any) {
       setErreur(e.message)
@@ -547,7 +550,7 @@ export default function Simulateur() {
                     <XAxis dataKey="nom" />
                     <YAxis label={{ value: 'secondes', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
-                    <Bar dataKey="duree_secondes" name="Durée (s)" fill="#4f7cff" />
+                    <Bar dataKey={(d: any) => d.performance?.duree_secondes} name="Durée (s)" fill="#4f7cff" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -561,19 +564,118 @@ export default function Simulateur() {
                     <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="estimation_energie_relative_pourcent" name="Énergie estimée (%)" fill="#fb923c" />
+                    <Bar
+                      dataKey={(d: any) => d.performance?.estimation_energie_relative_pourcent}
+                      name="Énergie estimée (%)"
+                      fill="#fb923c"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="explication-bloc">
-                <h4>Détail par modèle</h4>
+                <h4>Fiche comparative détaillée (~46 critères, classés par catégorie)</h4>
+                <p className="texte-muted">
+                  Chaque modèle est noté selon 5 angles : performance mesurée, fiche technique réelle
+                  (Ollama), analyse automatique de la réponse, avis d'un modèle arbitre, et une
+                  synthèse pour vous aider à choisir. Dépliez une catégorie pour le détail.
+                </p>
                 {resultat.resultats.map((r: any) => (
-                  <div key={r.id} className="simulateur-detail">
-                    <h5>{r.nom} — ~{r.parametres_milliards} milliards de paramètres</h5>
-                    <p className="texte-muted">
-                      {r.duree_secondes}s pour {r.longueur_reponse} caractères de réponse
-                    </p>
+                  <div key={r.id} className="simulateur-fiche-modele">
+                    <div className="simulateur-fiche-entete">
+                      <h5>{r.nom} — ~{r.parametres_milliards} milliards de paramètres</h5>
+                      {r.synthese && (
+                        <div className="simulateur-fiche-badges">
+                          <span className="chip">{r.synthese.niveau_materiel_requis}</span>
+                          {r.synthese.cas_usage_recommandes?.map((c: string) => (
+                            <span key={c} className="chip">{c}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {r.synthese && <p className="simulateur-verdict">💡 {r.synthese.verdict_global}</p>}
+
+                    {r.performance && (
+                      <details className="simulateur-categorie">
+                        <summary>Performance mesurée</summary>
+                        <ul className="simulateur-criteres">
+                          <li>Durée de réponse : {r.performance.duree_secondes}s</li>
+                          <li>Débit : {r.performance.debit_caracteres_par_seconde} caractères/s</li>
+                          <li>Longueur de la réponse : {r.performance.longueur_reponse_caracteres} caractères</li>
+                          <li>Nombre de mots : {r.performance.nb_mots}</li>
+                          <li>Nombre de phrases : {r.performance.nb_phrases}</li>
+                          <li>Longueur moyenne de phrase : {r.performance.longueur_moyenne_phrase_mots} mots</li>
+                          <li>Énergie relative estimée : {r.performance.estimation_energie_relative_pourcent}%</li>
+                        </ul>
+                      </details>
+                    )}
+
+                    {r.fiche_technique && (
+                      <details className="simulateur-categorie">
+                        <summary>Fiche technique du modèle</summary>
+                        <ul className="simulateur-criteres">
+                          <li>Éditeur : {r.fiche_technique.editeur}</li>
+                          <li>Licence : {r.fiche_technique.licence}</li>
+                          <li>Paramètres réels : {r.fiche_technique.parametres_reels_milliards ?? '—'} milliards</li>
+                          <li>Quantization utilisée ici : {r.fiche_technique.quantization ?? '—'}</li>
+                          <li>Format de fichier : {r.fiche_technique.format_fichier ?? '—'}</li>
+                          <li>Nombre de couches : {r.fiche_technique.nb_couches ?? '—'}</li>
+                          <li>Fenêtre de contexte : {r.fiche_technique.fenetre_contexte_tokens ?? '—'} tokens</li>
+                          <li>Poids du fichier : {r.fiche_technique.poids_fichier_go ?? '—'} Go</li>
+                          <li>RAM estimée nécessaire : {r.fiche_technique.estimation_ram_go ?? '—'} Go</li>
+                          <li>Année de sortie : {r.fiche_technique.annee_sortie ?? '—'}</li>
+                          <li>Spécialisation : {r.fiche_technique.specialisation}</li>
+                          <li>Support multilingue : {r.fiche_technique.multilingue}</li>
+                          <li>Function calling / outils : {r.fiche_technique.function_calling ? 'Oui' : 'Non'}</li>
+                        </ul>
+                      </details>
+                    )}
+
+                    {r.analyse_reponse && (
+                      <details className="simulateur-categorie">
+                        <summary>Analyse automatique de la réponse</summary>
+                        <ul className="simulateur-criteres">
+                          <li>Diversité lexicale : {r.analyse_reponse.diversite_lexicale_pourcent}%</li>
+                          <li>Réponse bien en français : {r.analyse_reponse.langue_correcte ? 'Oui' : 'À vérifier'}</li>
+                          <li>Contient des données chiffrées : {r.analyse_reponse.contient_donnees_chiffrees ? 'Oui' : 'Non'}</li>
+                          <li>Contient une liste structurée : {r.analyse_reponse.contient_liste_structuree ? 'Oui' : 'Non'}</li>
+                          <li>Marqueurs d'incertitude détectés : {r.analyse_reponse.nb_marqueurs_incertitude}</li>
+                          <li>Réponse semble tronquée : {r.analyse_reponse.reponse_semble_tronquee ? 'Oui' : 'Non'}</li>
+                          <li>
+                            Respect de la longueur demandée :{' '}
+                            {r.analyse_reponse.respect_longueur_demandee == null
+                              ? 'Non applicable'
+                              : r.analyse_reponse.respect_longueur_demandee
+                                ? 'Oui'
+                                : 'Non'}
+                          </li>
+                          <li>
+                            Cohérence lexicale avec la question :{' '}
+                            {r.analyse_reponse.coherence_avec_prompt_pourcent ?? '—'}%
+                          </li>
+                          <li>Mentionne être une IA : {r.analyse_reponse.presence_disclaimer_ia ? 'Oui' : 'Non'}</li>
+                        </ul>
+                      </details>
+                    )}
+
+                    {r.evaluation_qualitative ? (
+                      <details className="simulateur-categorie">
+                        <summary>Évaluation qualitative (avis d'un modèle arbitre)</summary>
+                        <ul className="simulateur-criteres">
+                          <li>Pertinence : {r.evaluation_qualitative.score_pertinence}/5</li>
+                          <li>Clarté : {r.evaluation_qualitative.score_clarte}/5</li>
+                          <li>Concision : {r.evaluation_qualitative.score_concision}/5</li>
+                          <li>Exactitude perçue : {r.evaluation_qualitative.score_exactitude_percue}/5</li>
+                          <li>Ton professionnel : {r.evaluation_qualitative.score_ton_professionnel}/5</li>
+                          <li>Recommandé par le juge : {r.evaluation_qualitative.recommande_par_le_juge ? 'Oui' : 'Non'}</li>
+                          <li>Justification : {r.evaluation_qualitative.justification_juge}</li>
+                        </ul>
+                      </details>
+                    ) : (
+                      <p className="texte-muted">Évaluation qualitative indisponible pour ce modèle.</p>
+                    )}
+
                     <p className="traduction-cible">{r.reponse}</p>
                   </div>
                 ))}

@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import json
+import re
 import time
 import uuid
 from pathlib import Path
@@ -40,6 +41,262 @@ _IDS_AUTORISES = {m["id"] for m in _MODELES}
 _comparer_jobs: dict[str, dict] = {}
 _MAX_COMPARER_JOBS_CONCURRENTS = 3
 _MAX_COMPARER_JOBS_CONSERVES = 50
+
+# --- Fiche technique par modèle : informations PUBLIQUES connues (éditeur, licence de repli,
+# spécialisation...), utilisées seulement quand Ollama ne les expose pas lui-même via /api/show
+# (le license/contexte/quantization RÉELS de cette installation sont toujours préférés — voir
+# _fiche_modele ci-dessous). Informatif, à jour au moment de la rédaction, non garanti à 100%.
+_FICHE_EDITEUR = {
+    "gemma2:2b": {
+        "editeur": "Google DeepMind",
+        "licence_repli": "Gemma Terms of Use",
+        "annee_sortie": 2024,
+        "specialisation": "Généraliste compact",
+        "multilingue": "Principalement anglais",
+        "function_calling": False,
+    },
+    "llama3.2:3b": {
+        "editeur": "Meta",
+        "licence_repli": "Llama 3.2 Community License",
+        "annee_sortie": 2024,
+        "specialisation": "Généraliste multilingue, optimisé edge/mobile",
+        "multilingue": "8 langues officielles (dont le français)",
+        "function_calling": True,
+    },
+    "phi3:mini": {
+        "editeur": "Microsoft",
+        "licence_repli": "MIT",
+        "annee_sortie": 2024,
+        "specialisation": "Raisonnement compact",
+        "multilingue": "Principalement anglais",
+        "function_calling": False,
+    },
+    "deepseek-coder:6.7b": {
+        "editeur": "DeepSeek AI",
+        "licence_repli": "DeepSeek License (usage commercial autorisé)",
+        "annee_sortie": 2023,
+        "specialisation": "Génération de code",
+        "multilingue": "Anglais et chinois, français non prioritaire",
+        "function_calling": False,
+    },
+    "mistral:7b-instruct": {
+        "editeur": "Mistral AI",
+        "licence_repli": "Apache 2.0",
+        "annee_sortie": 2023,
+        "specialisation": "Généraliste, bon support du français",
+        "multilingue": "Français, anglais, allemand, espagnol, italien",
+        "function_calling": True,
+    },
+    "qwen2.5:7b-instruct": {
+        "editeur": "Alibaba Cloud (équipe Qwen)",
+        "licence_repli": "Apache 2.0",
+        "annee_sortie": 2024,
+        "specialisation": "Généraliste, bon suivi d'instructions",
+        "multilingue": "29 langues déclarées",
+        "function_calling": True,
+    },
+    "llama3:8b": {
+        "editeur": "Meta",
+        "licence_repli": "Llama 3 Community License",
+        "annee_sortie": 2024,
+        "specialisation": "Généraliste",
+        "multilingue": "Principalement anglais",
+        "function_calling": False,
+    },
+}
+
+# Bits par poids selon la quantization GGUF réellement utilisée (valeurs approximatives connues,
+# pour une estimation de RAM nécessaire — PAS une mesure réelle de consommation mémoire).
+_BITS_PAR_QUANTIZATION = {
+    "Q2_K": 2.6,
+    "Q3_K_M": 3.9,
+    "Q4_0": 4.5,
+    "Q4_K_S": 4.6,
+    "Q4_K_M": 4.8,
+    "Q5_0": 5.5,
+    "Q5_K_M": 5.7,
+    "Q6_K": 6.6,
+    "Q8_0": 8.5,
+    "F16": 16.0,
+}
+
+_CAS_USAGE_PAR_SPECIALISATION = {
+    "Génération de code": ["Code", "Automatisation"],
+    "Généraliste, bon support du français": ["Rédaction professionnelle", "Généraliste"],
+    "Généraliste, bon suivi d'instructions": ["Rédaction", "Généraliste", "Raisonnement"],
+    "Généraliste multilingue, optimisé edge/mobile": ["Généraliste léger", "Usage mobile"],
+    "Raisonnement compact": ["Raisonnement", "Usage léger"],
+    "Généraliste compact": ["Usage léger", "Tests rapides"],
+    "Généraliste": ["Généraliste"],
+}
+
+_MODELE_JUGE = "qwen2.5:7b-instruct"
+
+_show_cache: dict[str, dict] = {}
+_tags_cache: list[dict] | None = None
+
+
+async def _fiche_modele(model_id: str) -> dict:
+    """Fiche technique : privilégie systématiquement les données RÉELLES de cette installation
+    Ollama (/api/show, /api/tags) sur toute donnée publique de repli — évite d'afficher un chiffre
+    inventé quand la vraie valeur est directement mesurable sur le serveur."""
+    if model_id not in _show_cache:
+        try:
+            _show_cache[model_id] = await ollama.show(model_id)
+        except Exception:  # noqa: BLE001 — dégrade sur la fiche publique plutôt que planter
+            _show_cache[model_id] = {}
+    show = _show_cache[model_id]
+    details = show.get("details", {})
+    mi = show.get("model_info", {})
+
+    global _tags_cache
+    if _tags_cache is None:
+        try:
+            _tags_cache = await ollama.list_models()
+        except Exception:  # noqa: BLE001
+            _tags_cache = []
+    tag_entry = next((m for m in _tags_cache if m.get("name") == model_id), None)
+    poids_fichier_go = round(tag_entry["size"] / 1e9, 2) if tag_entry and tag_entry.get("size") else None
+
+    contexte = next((v for k, v in mi.items() if k.endswith(".context_length")), None)
+    nb_couches = next((v for k, v in mi.items() if k.endswith(".block_count")), None)
+    param_count = mi.get("general.parameter_count")
+    quantization = details.get("quantization_level")
+    bits_par_poids = _BITS_PAR_QUANTIZATION.get(quantization, 5.5)
+    estimation_ram_go = round(param_count * bits_par_poids / 8 / 1e9, 1) if param_count else None
+
+    repli = _FICHE_EDITEUR.get(model_id, {})
+    specialisation = repli.get("specialisation", "Généraliste")
+
+    return {
+        "parametres_reels_milliards": round(param_count / 1e9, 2) if param_count else None,
+        "quantization": quantization,
+        "format_fichier": details.get("format"),
+        "nb_couches": nb_couches,
+        "fenetre_contexte_tokens": contexte,
+        "poids_fichier_go": poids_fichier_go,
+        "estimation_ram_go": estimation_ram_go,
+        "editeur": repli.get("editeur", "Non renseigné"),
+        "licence": mi.get("general.license") or repli.get("licence_repli", "Non renseignée"),
+        "annee_sortie": repli.get("annee_sortie"),
+        "specialisation": specialisation,
+        "multilingue": repli.get("multilingue", "Non précisé"),
+        "function_calling": repli.get("function_calling", False),
+        "cas_usage_recommandes": _CAS_USAGE_PAR_SPECIALISATION.get(specialisation, ["Généraliste"]),
+    }
+
+
+_MOTS_ANGLAIS_COURANTS = {
+    "the", "is", "and", "of", "to", "in", "for", "with", "this", "that", "you", "your", "are", "was",
+}
+_MARQUEURS_INCERTITUDE = [
+    "peut-être", "je pense", "je ne suis pas sûr", "il se peut", "probablement",
+    "sans certitude", "dans certains cas", "il semblerait",
+]
+
+
+def _analyser_reponse(texte: str, prompt: str) -> dict:
+    """Analyse purement déterministe du texte généré (aucun appel modèle) : longueur, structure,
+    diversité lexicale, cohérence avec le prompt — des heuristiques simples, pas des métriques
+    linguistiques validées scientifiquement, mais utiles pour comparer objectivement des réponses."""
+    phrases = [p.strip() for p in re.split(r"[.!?]+", texte) if p.strip()]
+    mots = re.findall(r"[a-zA-Zàâäéèêëïîôöùûüÿçœæ]+", texte.lower())
+    nb_mots = len(mots)
+    nb_phrases = max(len(phrases), 1)
+    diversite = round(100 * len(set(mots)) / nb_mots) if nb_mots else 0
+
+    proportion_anglais = (
+        sum(1 for m in mots if m in _MOTS_ANGLAIS_COURANTS) / nb_mots if nb_mots else 0
+    )
+
+    contient_chiffres = bool(re.search(r"\d", texte))
+    contient_liste = bool(re.search(r"(^|\n)\s*[-*•]|\n\s*\d+[.)]", texte))
+    nb_marqueurs = sum(texte.lower().count(m) for m in _MARQUEURS_INCERTITUDE)
+    semble_tronquee = len(texte.strip()) > 50 and texte.strip()[-1] not in ".!?»\"'"
+
+    match_longueur = re.search(r"(\d+)\s*phrases?", prompt.lower())
+    respect_longueur = None
+    if match_longueur:
+        respect_longueur = abs(nb_phrases - int(match_longueur.group(1))) <= 1
+
+    mots_prompt = set(re.findall(r"[a-zA-Zàâäéèêëïîôöùûüÿçœæ]{4,}", prompt.lower()))
+    mots_reponse = {m for m in mots if len(m) >= 4}
+    coherence = round(100 * len(mots_prompt & mots_reponse) / len(mots_prompt)) if mots_prompt else None
+
+    longueur_moyenne_phrase = round(nb_mots / nb_phrases, 1)
+    disclaimer_ia = bool(re.search(r"en tant qu.?ia|je suis une ia|je suis un mod[eè]le", texte.lower()))
+
+    return {
+        "nb_mots": nb_mots,
+        "nb_phrases": nb_phrases,
+        "longueur_moyenne_phrase_mots": longueur_moyenne_phrase,
+        "diversite_lexicale_pourcent": diversite,
+        "langue_correcte": proportion_anglais < 0.08,
+        "contient_donnees_chiffrees": contient_chiffres,
+        "contient_liste_structuree": contient_liste,
+        "nb_marqueurs_incertitude": nb_marqueurs,
+        "reponse_semble_tronquee": semble_tronquee,
+        "respect_longueur_demandee": respect_longueur,
+        "coherence_avec_prompt_pourcent": coherence,
+        "presence_disclaimer_ia": disclaimer_ia,
+    }
+
+
+async def _juger_reponse(prompt: str, reponse: str) -> dict | None:
+    """Évaluation qualitative par un modèle arbitre (qwen2.5:7b-instruct) — seul axe de cette
+    fiche qui n'est pas une mesure ou un fait objectif, donc à prendre comme un avis parmi
+    d'autres, pas une vérité absolue (surtout quand le modèle jugé est le juge lui-même)."""
+    instruction = (
+        "Tu es un évaluateur neutre. Note la réponse suivante à la question donnée, sur 5 axes, "
+        "de 1 (très faible) à 5 (excellent). Réponds UNIQUEMENT avec un objet JSON valide, sans "
+        "aucun texte autour, exactement au format : "
+        '{"pertinence": 0, "clarte": 0, "concision": 0, "exactitude_percue": 0, '
+        '"ton_professionnel": 0, "recommande": true, "justification": "une phrase"}\n\n'
+        f"Question posée : {prompt}\n\nRéponse à évaluer : {reponse[:400]}"
+    )
+    try:
+        brut = await ollama.generate(_MODELE_JUGE, instruction)
+        match = re.search(r"\{.*\}", brut, re.DOTALL)
+        if not match:
+            return None
+        data = json.loads(match.group(0))
+        return {
+            "score_pertinence": int(data.get("pertinence", 0)),
+            "score_clarte": int(data.get("clarte", 0)),
+            "score_concision": int(data.get("concision", 0)),
+            "score_exactitude_percue": int(data.get("exactitude_percue", 0)),
+            "score_ton_professionnel": int(data.get("ton_professionnel", 0)),
+            "recommande_par_le_juge": bool(data.get("recommande", False)),
+            "justification_juge": str(data.get("justification", ""))[:300],
+        }
+    except Exception:  # noqa: BLE001 — dégrade sans juge plutôt que planter la comparaison
+        return None
+
+
+def _niveau_materiel(params_milliards: float | None) -> str:
+    if params_milliards is None:
+        return "Non déterminé"
+    if params_milliards < 4:
+        return "Léger (CPU modeste, mini-PC)"
+    if params_milliards < 8:
+        return "Moyen (CPU multicœur récent)"
+    return "Conséquent (serveur dédié recommandé)"
+
+
+def _verdict_global(juge: dict | None, duree: float) -> str:
+    if juge is None:
+        return "Évaluation qualitative indisponible pour cette réponse — jugez directement sur le texte affiché ci-dessous."
+    score_moyen = (
+        juge["score_pertinence"] + juge["score_clarte"] + juge["score_concision"]
+        + juge["score_exactitude_percue"] + juge["score_ton_professionnel"]
+    ) / 5
+    if juge["recommande_par_le_juge"] and score_moyen >= 3.5 and duree < 15:
+        return "Bon compromis qualité/rapidité pour un usage professionnel courant."
+    if juge["recommande_par_le_juge"] and score_moyen >= 3.5:
+        return "Bonne qualité perçue, mais plus lent à répondre — à réserver aux tâches non urgentes."
+    if score_moyen < 2.5:
+        return "Qualité perçue limitée sur ce prompt précis — à réserver à des tâches simples."
+    return "Résultat correct, sans avantage déterminant sur ce prompt précis."
 
 # Les 3 modèles d'embeddings du Catalogue — comparables entre eux sur la durée et le score de
 # similarité, contrairement aux LLM génératifs, mais selon une mécanique différente (2 phrases
@@ -203,15 +460,56 @@ async def _executer_comparaison(job_id: str, prompt: str, modeles_a_comparer: li
             debut = time.monotonic()
             reponse = await ollama.generate(m["id"], prompt)
             duree = time.monotonic() - debut
+
+            fiche = await _fiche_modele(m["id"])
+            analyse = _analyser_reponse(reponse, prompt)
+            juge = await _juger_reponse(prompt, reponse)
+
+            debit = round(len(reponse) / duree) if duree > 0 else 0
+            niveau_materiel = _niveau_materiel(fiche["parametres_reels_milliards"])
+            cout_relatif_cpu = round(duree * m["parametres_milliards"] / plus_gros, 2)
+
             _comparer_jobs[job_id]["resultats"].append(
                 {
                     "id": m["id"],
                     "nom": m["nom"],
                     "parametres_milliards": m["parametres_milliards"],
-                    "duree_secondes": round(duree, 2),
-                    "longueur_reponse": len(reponse),
+                    # Catégorie "Performance mesurée" — mesures réelles sur cette machine.
+                    "performance": {
+                        "duree_secondes": round(duree, 2),
+                        "debit_caracteres_par_seconde": debit,
+                        "longueur_reponse_caracteres": len(reponse),
+                        "nb_mots": analyse["nb_mots"],
+                        "nb_phrases": analyse["nb_phrases"],
+                        "longueur_moyenne_phrase_mots": analyse["longueur_moyenne_phrase_mots"],
+                        "estimation_energie_relative_pourcent": round(
+                            100 * m["parametres_milliards"] / plus_gros
+                        ),
+                    },
+                    # Catégorie "Fiche technique" — données réelles Ollama + fiche publique éditeur.
+                    "fiche_technique": fiche,
+                    # Catégorie "Analyse de la réponse" — heuristiques déterministes sur le texte.
+                    "analyse_reponse": {
+                        "diversite_lexicale_pourcent": analyse["diversite_lexicale_pourcent"],
+                        "langue_correcte": analyse["langue_correcte"],
+                        "contient_donnees_chiffrees": analyse["contient_donnees_chiffrees"],
+                        "contient_liste_structuree": analyse["contient_liste_structuree"],
+                        "nb_marqueurs_incertitude": analyse["nb_marqueurs_incertitude"],
+                        "reponse_semble_tronquee": analyse["reponse_semble_tronquee"],
+                        "respect_longueur_demandee": analyse["respect_longueur_demandee"],
+                        "coherence_avec_prompt_pourcent": analyse["coherence_avec_prompt_pourcent"],
+                        "presence_disclaimer_ia": analyse["presence_disclaimer_ia"],
+                    },
+                    # Catégorie "Évaluation qualitative" — avis d'un modèle arbitre (qwen2.5:7b-instruct).
+                    "evaluation_qualitative": juge,
+                    # Catégorie "Synthèse décisionnelle" — combine les catégories précédentes.
+                    "synthese": {
+                        "niveau_materiel_requis": niveau_materiel,
+                        "cout_relatif_cpu": cout_relatif_cpu,
+                        "cas_usage_recommandes": fiche["cas_usage_recommandes"],
+                        "verdict_global": _verdict_global(juge, duree),
+                    },
                     "reponse": reponse[:400],
-                    "estimation_energie_relative_pourcent": round(100 * m["parametres_milliards"] / plus_gros),
                 }
             )
         _comparer_jobs[job_id]["status"] = "termine"

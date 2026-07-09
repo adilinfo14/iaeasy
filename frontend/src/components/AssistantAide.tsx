@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from 'react'
-import { demanderAide } from '../api/client'
+import { demarrerChat, suivreChat } from '../api/client'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -14,6 +14,7 @@ export default function AssistantAide() {
   const [messages, setMessages] = useState<Message[]>([MESSAGE_ACCUEIL])
   const [saisie, setSaisie] = useState('')
   const [enCours, setEnCours] = useState(false)
+  const [reponseEnCours, setReponseEnCours] = useState('')
 
   async function envoyer() {
     const texte = saisie.trim()
@@ -22,12 +23,38 @@ export default function AssistantAide() {
     setMessages((m) => [...m, { role: 'user', content: texte }])
     setSaisie('')
     setEnCours(true)
+    setReponseEnCours('')
     try {
-      const r = await demanderAide(texte, historique)
-      setMessages((m) => [...m, { role: 'assistant', content: r.reponse }])
+      const { job_id } = await demarrerChat(texte, historique)
+      // Le flux SSE rejoue tous les morceaux depuis le début à chaque reconnexion — remettre le
+      // texte accumulé à zéro sur onOuverture évite un effet de frappe dupliqué si le visiteur
+      // change d'onglet/d'application sur mobile pendant la réponse.
+      let accumulateur = ''
+      suivreChat(
+        job_id,
+        (delta) => {
+          accumulateur += delta
+          setReponseEnCours(accumulateur)
+        },
+        (fin) => {
+          if (fin.status === 'erreur') {
+            setMessages((m) => [
+              ...m,
+              { role: 'assistant', content: `Désolé, une erreur est survenue : ${fin.erreur}` },
+            ])
+          } else {
+            setMessages((m) => [...m, { role: 'assistant', content: fin.reponse || accumulateur }])
+          }
+          setReponseEnCours('')
+          setEnCours(false)
+        },
+        () => {
+          accumulateur = ''
+          setReponseEnCours('')
+        },
+      )
     } catch (e: any) {
       setMessages((m) => [...m, { role: 'assistant', content: `Désolé, une erreur est survenue : ${e.message}` }])
-    } finally {
       setEnCours(false)
     }
   }
@@ -58,7 +85,16 @@ export default function AssistantAide() {
                 {m.content}
               </div>
             ))}
-            {enCours && <div className="assistant-msg assistant-msg-bot assistant-msg-attente">…</div>}
+            {enCours && reponseEnCours && (
+              <div className="assistant-msg assistant-msg-bot">{reponseEnCours}</div>
+            )}
+            {enCours && !reponseEnCours && (
+              <div className="assistant-msg assistant-msg-bot assistant-msg-attente">
+                <span className="assistant-typing-dot" />
+                <span className="assistant-typing-dot" />
+                <span className="assistant-typing-dot" />
+              </div>
+            )}
           </div>
           <div className="assistant-saisie">
             <textarea

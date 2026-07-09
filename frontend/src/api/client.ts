@@ -85,8 +85,14 @@ export function suivreEntrainement(
   jobId: string,
   onLoss: (point: PointLoss) => void,
   onFin: (fin: FinEntrainement) => void,
+  onOuverture?: () => void,
 ) {
   const source = new EventSource(`${BASE}/training/${jobId}/stream`)
+  // Le flux SSE rejoue tout l'historique depuis le début à chaque (re)connexion — si le visiteur
+  // change d'onglet/d'application sur mobile et que la connexion est coupée puis rétablie
+  // (reconnexion automatique d'EventSource), 'open' se déclenche à nouveau : à l'appelant de
+  // remettre son accumulateur à zéro pour éviter des points de courbe dupliqués.
+  source.addEventListener('open', () => onOuverture?.())
   source.addEventListener('loss', (e) => onLoss(JSON.parse((e as MessageEvent).data)))
   source.addEventListener('fin', (e) => {
     onFin(JSON.parse((e as MessageEvent).data))
@@ -174,7 +180,7 @@ export async function listerMetiers() {
   return r.json()
 }
 
-export async function demanderAide(message: string, historique: { role: string; content: string }[]) {
+export async function demarrerChat(message: string, historique: { role: string; content: string }[]) {
   const r = await fetch(`${BASE}/aide/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -185,6 +191,26 @@ export async function demanderAide(message: string, historique: { role: string; 
     throw new Error(err.detail || "Erreur pendant la discussion avec l'assistant")
   }
   return r.json()
+}
+
+// Le flux SSE rejoue tous les morceaux depuis le début à chaque (re)connexion (utile si le
+// visiteur change d'onglet/d'application sur mobile et que la connexion est coupée) — l'appelant
+// doit remettre à zéro son accumulateur sur onOuverture pour éviter un texte dupliqué.
+export function suivreChat(
+  jobId: string,
+  onMorceau: (delta: string) => void,
+  onFin: (fin: { status: string; erreur: string | null; reponse?: string }) => void,
+  onOuverture?: () => void,
+) {
+  const source = new EventSource(`${BASE}/aide/chat/${jobId}/stream`)
+  source.addEventListener('open', () => onOuverture?.())
+  source.addEventListener('morceau', (e) => onMorceau(JSON.parse((e as MessageEvent).data).delta))
+  source.addEventListener('fin', (e) => {
+    onFin(JSON.parse((e as MessageEvent).data))
+    source.close()
+  })
+  source.addEventListener('erreur', () => source.close())
+  return () => source.close()
 }
 
 export type StatsAvis = { total: number; moyenne: number | null; distribution: Record<string, number> }
@@ -235,8 +261,10 @@ export function suivreComparaisonModeles(
   jobId: string,
   onModele: (resultat: any) => void,
   onFin: (fin: { status: string; erreur: string | null }) => void,
+  onOuverture?: () => void,
 ) {
   const source = new EventSource(`${BASE}/simulateur/comparer/${jobId}/stream`)
+  source.addEventListener('open', () => onOuverture?.())
   source.addEventListener('modele', (e) => onModele(JSON.parse((e as MessageEvent).data)))
   source.addEventListener('fin', (e) => {
     onFin(JSON.parse((e as MessageEvent).data))

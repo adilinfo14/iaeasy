@@ -66,6 +66,9 @@ export default function Entrainement() {
           setApres(jobFinal.apres)
         }
       },
+      // Le flux SSE rejoue tout depuis le début à chaque reconnexion (utile si l'onglet a été mis
+      // en arrière-plan sur mobile) — repartir de zéro ici évite des points dupliqués sur la courbe.
+      () => setHistorique([]),
     )
   }
 
