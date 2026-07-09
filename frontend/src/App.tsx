@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { enregistrerVisite } from './api/client'
 import AssistantAide from './components/AssistantAide'
@@ -14,6 +14,31 @@ import Securite from './pages/Securite'
 import Simulateur from './pages/Simulateur'
 import StrategieTest from './pages/StrategieTest'
 import Videos from './pages/Videos'
+
+const GROUPES_MENU = [
+  {
+    id: 'pratiquer',
+    label: 'Pratiquer',
+    liens: [
+      { to: '/catalogue', label: 'Catalogue' },
+      { to: '/entrainement', label: 'Entraînement' },
+      { to: '/parcours', label: 'Parcours' },
+      { to: '/constructeur', label: 'Constructeur' },
+      { to: '/simulateur', label: 'Simulateur' },
+    ],
+  },
+  {
+    id: 'ressources',
+    label: 'Ressources',
+    liens: [
+      { to: '/strategie-test', label: 'Stratégie de tests' },
+      { to: '/securite', label: 'Sécurité' },
+      { to: '/glossaire', label: 'Glossaire' },
+      { to: '/metiers', label: 'Mon métier' },
+      { to: '/videos', label: 'Vidéos' },
+    ],
+  },
+]
 
 function useTheme() {
   const [theme, setTheme] = useState<'sombre' | 'doux'>(
@@ -35,17 +60,36 @@ function useTheme() {
 export default function App() {
   const [theme, setTheme] = useTheme()
   const [menuOuvert, setMenuOuvert] = useState(false)
+  const [dropdownOuvert, setDropdownOuvert] = useState<string | null>(null)
   const location = useLocation()
+  const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     enregistrerVisite()
   }, [])
 
-  // Referme le menu mobile dès qu'on navigue vers une nouvelle page (clic sur un lien,
-  // bouton retour du navigateur...) plutôt que d'ajouter un onClick sur chaque NavLink.
+  // Referme le menu mobile et les sous-menus dès qu'on navigue vers une nouvelle page (clic
+  // sur un lien, bouton retour du navigateur...) plutôt que d'ajouter un onClick sur chaque lien.
   useEffect(() => {
     setMenuOuvert(false)
+    setDropdownOuvert(null)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!dropdownOuvert) return
+    function surClicExterieur(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) setDropdownOuvert(null)
+    }
+    function surEchap(e: KeyboardEvent) {
+      if (e.key === 'Escape') setDropdownOuvert(null)
+    }
+    document.addEventListener('mousedown', surClicExterieur)
+    window.addEventListener('keydown', surEchap)
+    return () => {
+      document.removeEventListener('mousedown', surClicExterieur)
+      window.removeEventListener('keydown', surEchap)
+    }
+  }, [dropdownOuvert])
 
   return (
     <div className="app">
@@ -61,17 +105,29 @@ export default function App() {
         >
           {menuOuvert ? '✕' : '☰'}
         </button>
-        <nav className={menuOuvert ? 'ouvert' : ''}>
-          <NavLink to="/catalogue">Catalogue</NavLink>
-          <NavLink to="/entrainement">Entraînement</NavLink>
-          <NavLink to="/parcours">Parcours</NavLink>
-          <NavLink to="/constructeur">Constructeur</NavLink>
-          <NavLink to="/strategie-test">Stratégie de tests</NavLink>
-          <NavLink to="/securite">Sécurité</NavLink>
-          <NavLink to="/glossaire">Glossaire</NavLink>
-          <NavLink to="/metiers">Mon métier</NavLink>
-          <NavLink to="/simulateur">Simulateur</NavLink>
-          <NavLink to="/videos">Vidéos</NavLink>
+        <nav className={menuOuvert ? 'ouvert' : ''} ref={navRef}>
+          {GROUPES_MENU.map((groupe) => {
+            const actif = groupe.liens.some((l) => l.to === location.pathname)
+            return (
+              <div key={groupe.id} className="nav-dropdown">
+                <button
+                  type="button"
+                  className={actif ? 'nav-dropdown-trigger actif' : 'nav-dropdown-trigger'}
+                  onClick={() => setDropdownOuvert(dropdownOuvert === groupe.id ? null : groupe.id)}
+                  aria-expanded={dropdownOuvert === groupe.id}
+                >
+                  {groupe.label} <span className="nav-dropdown-caret">▾</span>
+                </button>
+                <div className={dropdownOuvert === groupe.id ? 'nav-dropdown-panel ouvert' : 'nav-dropdown-panel'}>
+                  {groupe.liens.map((l) => (
+                    <NavLink key={l.to} to={l.to}>
+                      {l.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
           <NavLink to="/avis">Avis</NavLink>
         </nav>
         <button

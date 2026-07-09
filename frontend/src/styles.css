@@ -190,6 +190,78 @@ body {
   border-bottom-color: var(--accent);
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  padding: 0.3rem 0;
+  font: inherit;
+  font-size: 1rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.nav-dropdown-trigger:hover,
+.nav-dropdown-trigger.actif {
+  color: var(--fg);
+}
+
+.nav-dropdown-trigger.actif {
+  border-bottom-color: var(--accent);
+}
+
+.nav-dropdown-caret {
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.nav-dropdown-trigger[aria-expanded='true'] .nav-dropdown-caret {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.6rem;
+  min-width: 200px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.4rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+}
+
+.nav-dropdown-panel.ouvert {
+  display: flex;
+}
+
+.nav-dropdown-panel a {
+  border-bottom: none !important;
+  padding: 0.55rem 0.7rem !important;
+  border-radius: 6px;
+}
+
+.nav-dropdown-panel a:hover {
+  background: var(--accent-soft);
+}
+
+.nav-dropdown-panel a.active {
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
 @media (max-width: 780px) {
   .topnav {
     flex-wrap: wrap;
@@ -224,6 +296,37 @@ body {
   .topnav nav a {
     padding: 0.75rem 0.3rem;
     border-bottom: 1px solid var(--border);
+  }
+
+  /* Pas de survol tactile fiable sur mobile : chaque groupe devient un simple en-tête de
+     section, et son sous-menu reste toujours déplié dans la liste verticale. */
+  .nav-dropdown-trigger {
+    pointer-events: none;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 0.3rem 0.2rem;
+    color: var(--fg-muted);
+  }
+
+  .nav-dropdown-caret {
+    display: none;
+  }
+
+  .nav-dropdown-panel,
+  .nav-dropdown-panel.ouvert {
+    display: flex;
+    position: static;
+    margin-top: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .nav-dropdown-panel a {
+    padding: 0.65rem 0.6rem !important;
   }
 }
 
