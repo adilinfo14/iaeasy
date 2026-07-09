@@ -422,6 +422,35 @@ button:disabled {
   padding: 1rem 1.3rem;
 }
 
+.video-bloc {
+  margin-bottom: 2.5rem;
+}
+
+.video-embed-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16 / 9;
+  margin: 0.8rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.video-embed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.video-source {
+  font-size: 0.78rem;
+  font-style: italic;
+  max-width: 800px;
+}
+
 .parcours-liste {
   list-style: none;
   margin: 0;

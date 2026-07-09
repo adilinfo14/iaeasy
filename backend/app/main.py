@@ -16,6 +16,7 @@ from .simulateur.router import router as simulateur_router
 from .stats.router import router as stats_router
 from .strategie_test.router import router as strategie_test_router
 from .training.router import router as training_router
+from .videos.router import router as videos_router
 
 # Documentation interactive désactivée en production : le SPA React ne l'utilise jamais et
 # elle ne fait qu'élargir la surface de reconnaissance pour un visiteur non prévu.
@@ -41,6 +42,7 @@ app.include_router(metiers_router, prefix="/api")
 app.include_router(simulateur_router, prefix="/api")
 app.include_router(aide_router, prefix="/api")
 app.include_router(avis_router, prefix="/api")
+app.include_router(videos_router, prefix="/api")
 
 
 @app.get("/api/health")

@@ -62,6 +62,12 @@ const MODULES = [
     pitch: 'Comparez en direct la vitesse et le coût réel de plusieurs modèles.',
   },
   {
+    to: '/videos',
+    icone: '🎬',
+    titre: 'Vidéos',
+    pitch: "Des schémas de conférences IA expliqués en français simple.",
+  },
+  {
     to: '/avis',
     icone: '⭐',
     titre: 'Avis',

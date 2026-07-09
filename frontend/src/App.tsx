@@ -12,6 +12,7 @@ import Metiers from './pages/Metiers'
 import Parcours from './pages/Parcours'
 import Simulateur from './pages/Simulateur'
 import StrategieTest from './pages/StrategieTest'
+import Videos from './pages/Videos'
 
 function useTheme() {
   const [theme, setTheme] = useState<'sombre' | 'doux'>(
@@ -68,6 +69,7 @@ export default function App() {
           <NavLink to="/glossaire">Glossaire</NavLink>
           <NavLink to="/metiers">Mon métier</NavLink>
           <NavLink to="/simulateur">Simulateur</NavLink>
+          <NavLink to="/videos">Vidéos</NavLink>
           <NavLink to="/avis">Avis</NavLink>
         </nav>
         <button
@@ -90,6 +92,7 @@ export default function App() {
           <Route path="/glossaire" element={<Glossaire />} />
           <Route path="/metiers" element={<Metiers />} />
           <Route path="/simulateur" element={<Simulateur />} />
+          <Route path="/videos" element={<Videos />} />
           <Route path="/avis" element={<Avis />} />
         </Routes>
       </main>
