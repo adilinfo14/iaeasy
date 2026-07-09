@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { comparerModeles, listerModelesSimulateur } from '../api/client'
+import {
+  comparerEmbeddings,
+  comparerModeles,
+  listerModelesEmbeddings,
+  listerModelesSimulateur,
+} from '../api/client'
 
 const CATEGORIES = [
   {
@@ -107,18 +112,46 @@ const CATEGORIES = [
 
 const TOUS_LES_EXEMPLES = CATEGORIES.flatMap((c) => c.exemples)
 
+const PAIRES_EXEMPLES = [
+  {
+    categorie: 'Synonymes',
+    phraseA: 'Le chat dort sur le canapé.',
+    phraseB: 'Un félin fait la sieste sur le sofa.',
+  },
+  {
+    categorie: 'Sens opposé',
+    phraseA: 'Le client est très satisfait du service.',
+    phraseB: 'Le client est furieux et veut être remboursé.',
+  },
+  {
+    categorie: 'Sans rapport',
+    phraseA: 'La réunion est reportée à demain.',
+    phraseB: 'Il pleut fort sur la côte bretonne.',
+  },
+  {
+    categorie: 'Paraphrase professionnelle',
+    phraseA: "Comment poser mes congés payés ?",
+    phraseB: 'Quelle est la procédure pour demander des vacances ?',
+  },
+  {
+    categorie: 'Nuance subtile',
+    phraseA: "L'appartement était impeccable, exactement conforme aux photos.",
+    phraseB: 'Le colis est arrivé avec deux jours de retard et l\'emballage était abîmé.',
+  },
+]
+
 const FAMILLES = [
   {
     id: 'llm_generatif',
     label: 'LLM génératif',
     disponible: true,
-    note: 'Seule famille comparable ici : ces modèles répondent à un prompt en texte libre.',
+    note: 'Ces modèles répondent à un prompt en texte libre : on compare durée et réponse.',
   },
   {
     id: 'embeddings',
     label: 'Embeddings',
-    disponible: false,
-    note: "Pas de prompt en texte libre à comparer — un embedding produit un vecteur, pas une réponse.",
+    disponible: true,
+    note: 'Ces modèles transforment 2 phrases en vecteurs : on compare durée et score de similarité.',
   },
   {
     id: 'vision',
@@ -144,15 +177,38 @@ export default function Simulateur() {
   const [selectionnes, setSelectionnes] = useState<Set<string>>(new Set())
   const [familleActive, setFamilleActive] = useState('llm_generatif')
 
+  // Famille Embeddings : état séparé, mécanique différente (2 phrases à comparer, pas un
+  // prompt qui produit une réponse).
+  const [modelesEmbeddings, setModelesEmbeddings] = useState<any[]>([])
+  const [selectionnesEmbeddings, setSelectionnesEmbeddings] = useState<Set<string>>(new Set())
+  const [phraseA, setPhraseA] = useState(PAIRES_EXEMPLES[0].phraseA)
+  const [phraseB, setPhraseB] = useState(PAIRES_EXEMPLES[0].phraseB)
+  const [enCoursEmbeddings, setEnCoursEmbeddings] = useState(false)
+  const [resultatEmbeddings, setResultatEmbeddings] = useState<any>(null)
+  const [erreurEmbeddings, setErreurEmbeddings] = useState<string | null>(null)
+
   useEffect(() => {
     listerModelesSimulateur().then((liste) => {
       setModeles(liste)
       setSelectionnes(new Set(liste.map((m: any) => m.id)))
     })
+    listerModelesEmbeddings().then((liste) => {
+      setModelesEmbeddings(liste)
+      setSelectionnesEmbeddings(new Set(liste.map((m: any) => m.id)))
+    })
   }, [])
 
   function basculerModele(id: string) {
     setSelectionnes((s) => {
+      const copie = new Set(s)
+      if (copie.has(id)) copie.delete(id)
+      else copie.add(id)
+      return copie
+    })
+  }
+
+  function basculerModeleEmbeddings(id: string) {
+    setSelectionnesEmbeddings((s) => {
       const copie = new Set(s)
       if (copie.has(id)) copie.delete(id)
       else copie.add(id)
@@ -174,17 +230,33 @@ export default function Simulateur() {
     }
   }
 
+  async function lancerEmbeddings() {
+    setEnCoursEmbeddings(true)
+    setErreurEmbeddings(null)
+    setResultatEmbeddings(null)
+    try {
+      const r = await comparerEmbeddings(phraseA, phraseB, Array.from(selectionnesEmbeddings))
+      setResultatEmbeddings(r)
+    } catch (e: any) {
+      setErreurEmbeddings(e.message)
+    } finally {
+      setEnCoursEmbeddings(false)
+    }
+  }
+
   return (
     <div className="page page-simulateur">
       <h1>⚖️ Simulateur coût / latence des modèles</h1>
       <p className="page-intro">
-        Le Simulateur soumet un même prompt, successivement, à l'ensemble des modèles génératifs
-        sélectionnés — les modèles d'embeddings, de vision ou de classification classique échappant
-        par nature à cette comparaison, puisqu'ils ne répondent pas à un texte libre. La{' '}
+        Le Simulateur soumet une même entrée, successivement, à l'ensemble des modèles sélectionnés
+        au sein d'une même famille — LLM génératif (un prompt en texte libre) ou embeddings (deux
+        phrases à comparer). Les modèles de vision ou de classification classique échappent en
+        revanche à cette comparaison, le premier attendant une image et le second n'étant
+        interrogeable qu'après un entraînement en direct. La{' '}
         <strong>durée affichée constitue une mesure réelle</strong>, effectuée en direct sur cette
-        machine, quand l'énergie demeure une <strong>approximation illustrative</strong>,
-        proportionnelle au nombre de paramètres de chaque modèle plutôt qu'une consommation
-        véritablement observée.
+        machine, quand l'énergie relative (LLM uniquement) demeure une{' '}
+        <strong>approximation illustrative</strong>, proportionnelle au nombre de paramètres de
+        chaque modèle plutôt qu'une consommation véritablement observée.
       </p>
 
       <div className="simulateur-modeles-annonce">
@@ -206,7 +278,7 @@ export default function Simulateur() {
           {FAMILLES.find((f) => f.id === familleActive)?.note}
         </p>
 
-        {modeles.length > 0 && (
+        {familleActive === 'llm_generatif' && modeles.length > 0 && (
           <>
             <p className="texte-muted">
               2. Choisissez les modèles de cette famille à comparer sur le même prompt (
@@ -234,90 +306,228 @@ export default function Simulateur() {
             </div>
           </>
         )}
+
+        {familleActive === 'embeddings' && modelesEmbeddings.length > 0 && (
+          <>
+            <p className="texte-muted">
+              2. Choisissez les modèles de cette famille à comparer sur les 2 mêmes phrases (
+              {selectionnesEmbeddings.size}/{modelesEmbeddings.length} sélectionnés) :
+            </p>
+            <div className="exemples-chips">
+              <button
+                className="chip"
+                onClick={() => setSelectionnesEmbeddings(new Set(modelesEmbeddings.map((m) => m.id)))}
+              >
+                Tout sélectionner
+              </button>
+              <button className="chip" onClick={() => setSelectionnesEmbeddings(new Set())}>
+                Tout désélectionner
+              </button>
+            </div>
+            <div className="simulateur-modeles-liste">
+              {modelesEmbeddings.map((m) => (
+                <label key={m.id} className="simulateur-modele-case">
+                  <input
+                    type="checkbox"
+                    checked={selectionnesEmbeddings.has(m.id)}
+                    onChange={() => basculerModeleEmbeddings(m.id)}
+                  />
+                  {m.nom} <span className="texte-muted">({m.parametres_millions} M)</span>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      <p className="texte-muted">
-        3. Choisissez un prompt parmi {TOUS_LES_EXEMPLES.length} exemples classés par type de tâche
-        (ce ne sont pas des familles de modèle différentes, juste des catégories de tâche à tester) :
-      </p>
-      <div className="exemples-categories">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.categorie}
-            className={c.categorie === categorieActive ? 'chip actif' : 'chip'}
-            onClick={() => setCategorieActive(c.categorie)}
-          >
-            {c.categorie}
-          </button>
-        ))}
-      </div>
-      <div className="exemples-chips">
-        {CATEGORIES.find((c) => c.categorie === categorieActive)?.exemples.map((ex, i) => (
-          <button key={i} className={ex === prompt ? 'chip actif' : 'chip'} onClick={() => setPrompt(ex)}>
-            {ex.length > 50 ? `${ex.slice(0, 50)}…` : ex}
-          </button>
-        ))}
-      </div>
-
-      <textarea
-        className="simulateur-prompt"
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        rows={3}
-        maxLength={300}
-      />
-
-      <button onClick={lancer} disabled={enCours || !prompt.trim() || selectionnes.size === 0}>
-        {enCours
-          ? `${selectionnes.size} modèle${selectionnes.size > 1 ? 's' : ''} à comparer, cela peut prendre quelques minutes…`
-          : selectionnes.size === 0
-            ? 'Sélectionnez au moins un modèle'
-            : 'Lancer la comparaison'}
-      </button>
-
-      {erreur && <p className="erreur">{erreur}</p>}
-
-      {resultat && (
+      {familleActive === 'llm_generatif' && (
         <>
-          <div className="simulateur-graphique">
-            <h4>Durée de réponse mesurée (secondes)</h4>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={resultat.resultats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="nom" />
-                <YAxis label={{ value: 'secondes', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Bar dataKey="duree_secondes" name="Durée (s)" fill="#4f7cff" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="simulateur-graphique">
-            <h4>Estimation d'énergie relative (illustrative, % du plus gros modèle)</h4>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={resultat.resultats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="nom" />
-                <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="estimation_energie_relative_pourcent" name="Énergie estimée (%)" fill="#fb923c" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="explication-bloc">
-            <h4>Détail par modèle</h4>
-            {resultat.resultats.map((r: any) => (
-              <div key={r.id} className="simulateur-detail">
-                <h5>{r.nom} — ~{r.parametres_milliards} milliards de paramètres</h5>
-                <p className="texte-muted">
-                  {r.duree_secondes}s pour {r.longueur_reponse} caractères de réponse
-                </p>
-                <p className="traduction-cible">{r.reponse}</p>
-              </div>
+          <p className="texte-muted">
+            3. Choisissez un prompt parmi {TOUS_LES_EXEMPLES.length} exemples classés par type de
+            tâche (ce ne sont pas des familles de modèle différentes, juste des catégories de tâche
+            à tester) :
+          </p>
+          <div className="exemples-categories">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.categorie}
+                className={c.categorie === categorieActive ? 'chip actif' : 'chip'}
+                onClick={() => setCategorieActive(c.categorie)}
+              >
+                {c.categorie}
+              </button>
             ))}
           </div>
+          <div className="exemples-chips">
+            {CATEGORIES.find((c) => c.categorie === categorieActive)?.exemples.map((ex, i) => (
+              <button key={i} className={ex === prompt ? 'chip actif' : 'chip'} onClick={() => setPrompt(ex)}>
+                {ex.length > 50 ? `${ex.slice(0, 50)}…` : ex}
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            className="simulateur-prompt"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={3}
+            maxLength={300}
+          />
+
+          <button onClick={lancer} disabled={enCours || !prompt.trim() || selectionnes.size === 0}>
+            {enCours
+              ? `${selectionnes.size} modèle${selectionnes.size > 1 ? 's' : ''} à comparer, cela peut prendre quelques minutes…`
+              : selectionnes.size === 0
+                ? 'Sélectionnez au moins un modèle'
+                : 'Lancer la comparaison'}
+          </button>
+
+          {erreur && <p className="erreur">{erreur}</p>}
+
+          {resultat && (
+            <>
+              <div className="simulateur-graphique">
+                <h4>Durée de réponse mesurée (secondes)</h4>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={resultat.resultats}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="nom" />
+                    <YAxis label={{ value: 'secondes', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Bar dataKey="duree_secondes" name="Durée (s)" fill="#4f7cff" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="simulateur-graphique">
+                <h4>Estimation d'énergie relative (illustrative, % du plus gros modèle)</h4>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={resultat.resultats}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="nom" />
+                    <YAxis label={{ value: '%', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="estimation_energie_relative_pourcent" name="Énergie estimée (%)" fill="#fb923c" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="explication-bloc">
+                <h4>Détail par modèle</h4>
+                {resultat.resultats.map((r: any) => (
+                  <div key={r.id} className="simulateur-detail">
+                    <h5>{r.nom} — ~{r.parametres_milliards} milliards de paramètres</h5>
+                    <p className="texte-muted">
+                      {r.duree_secondes}s pour {r.longueur_reponse} caractères de réponse
+                    </p>
+                    <p className="traduction-cible">{r.reponse}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {familleActive === 'embeddings' && (
+        <>
+          <p className="texte-muted">
+            3. Choisissez 2 phrases à comparer — un exemple type, ou les vôtres :
+          </p>
+          <div className="exemples-chips">
+            {PAIRES_EXEMPLES.map((p, i) => (
+              <button
+                key={i}
+                className={p.phraseA === phraseA && p.phraseB === phraseB ? 'chip actif' : 'chip'}
+                onClick={() => {
+                  setPhraseA(p.phraseA)
+                  setPhraseB(p.phraseB)
+                }}
+              >
+                {p.categorie}
+              </button>
+            ))}
+          </div>
+
+          <label className="texte-muted" htmlFor="phrase-a">
+            Phrase A
+          </label>
+          <textarea
+            id="phrase-a"
+            className="simulateur-prompt"
+            value={phraseA}
+            onChange={(e) => setPhraseA(e.target.value)}
+            rows={2}
+            maxLength={300}
+          />
+          <label className="texte-muted" htmlFor="phrase-b">
+            Phrase B
+          </label>
+          <textarea
+            id="phrase-b"
+            className="simulateur-prompt"
+            value={phraseB}
+            onChange={(e) => setPhraseB(e.target.value)}
+            rows={2}
+            maxLength={300}
+          />
+
+          <button
+            onClick={lancerEmbeddings}
+            disabled={enCoursEmbeddings || !phraseA.trim() || !phraseB.trim() || selectionnesEmbeddings.size === 0}
+          >
+            {enCoursEmbeddings
+              ? `${selectionnesEmbeddings.size} modèle${selectionnesEmbeddings.size > 1 ? 's' : ''} à comparer…`
+              : selectionnesEmbeddings.size === 0
+                ? 'Sélectionnez au moins un modèle'
+                : 'Lancer la comparaison'}
+          </button>
+
+          {erreurEmbeddings && <p className="erreur">{erreurEmbeddings}</p>}
+
+          {resultatEmbeddings && (
+            <>
+              <div className="simulateur-graphique">
+                <h4>Durée de calcul mesurée (secondes, 2 phrases confondues)</h4>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={resultatEmbeddings.resultats}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="nom" />
+                    <YAxis label={{ value: 'secondes', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Bar dataKey="duree_secondes" name="Durée (s)" fill="#4f7cff" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="simulateur-graphique">
+                <h4>Score de similarité cosinus entre les 2 phrases (0 = aucun rapport, 1 = identique)</h4>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={resultatEmbeddings.resultats}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="nom" />
+                    <YAxis domain={[0, 1]} />
+                    <Tooltip />
+                    <Bar dataKey="similarite_cosinus" name="Similarité cosinus" fill="#22c55e" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="explication-bloc">
+                <h4>Détail par modèle</h4>
+                {resultatEmbeddings.resultats.map((r: any) => (
+                  <div key={r.id} className="simulateur-detail">
+                    <h5>{r.nom} — ~{r.parametres_millions} millions de paramètres</h5>
+                    <p className="texte-muted">
+                      {r.duree_secondes}s · vecteur de {r.dimension_vecteur} dimensions · similarité
+                      cosinus : {r.similarite_cosinus}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

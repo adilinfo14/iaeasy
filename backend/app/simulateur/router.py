@@ -24,6 +24,19 @@ _PROMPT_DEFAUT = "Explique en 3 phrases ce qu'est la garantie décennale."
 _LONGUEUR_MAX_PROMPT = 300
 _IDS_AUTORISES = {m["id"] for m in _MODELES}
 
+# Les 3 modèles d'embeddings du Catalogue — comparables entre eux sur la durée et le score de
+# similarité, contrairement aux LLM génératifs, mais selon une mécanique différente (2 phrases
+# à comparer plutôt qu'un prompt libre).
+_MODELES_EMBEDDINGS = [
+    {"id": "all-minilm", "nom": "All-MiniLM", "parametres_millions": 23},
+    {"id": "nomic-embed-text", "nom": "Nomic Embed Text", "parametres_millions": 137},
+    {"id": "mxbai-embed-large", "nom": "Mxbai Embed Large", "parametres_millions": 335},
+]
+_IDS_EMBEDDINGS_AUTORISES = {m["id"] for m in _MODELES_EMBEDDINGS}
+_PHRASE_A_DEFAUT = "Le chat dort sur le canapé."
+_PHRASE_B_DEFAUT = "Un félin fait la sieste sur le sofa."
+_LONGUEUR_MAX_PHRASE = 300
+
 
 class ComparerRequest(BaseModel):
     prompt: str | None = Field(default=None, max_length=_LONGUEUR_MAX_PROMPT)
@@ -32,9 +45,27 @@ class ComparerRequest(BaseModel):
     modeles_ids: list[str] | None = Field(default=None, max_length=len(_MODELES))
 
 
+class ComparerEmbeddingsRequest(BaseModel):
+    phrase_a: str | None = Field(default=None, max_length=_LONGUEUR_MAX_PHRASE)
+    phrase_b: str | None = Field(default=None, max_length=_LONGUEUR_MAX_PHRASE)
+    modeles_ids: list[str] | None = Field(default=None, max_length=len(_MODELES_EMBEDDINGS))
+
+
+def _cosine(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    norme_a = sum(x * x for x in a) ** 0.5
+    norme_b = sum(y * y for y in b) ** 0.5
+    return dot / (norme_a * norme_b) if norme_a and norme_b else 0.0
+
+
 @router.get("/modeles")
 def modeles():
     return _MODELES
+
+
+@router.get("/modeles-embeddings")
+def modeles_embeddings():
+    return _MODELES_EMBEDDINGS
 
 
 @router.post("/comparer")
@@ -63,3 +94,33 @@ async def comparer(requete: ComparerRequest):
         )
 
     return {"prompt": prompt, "resultats": resultats}
+
+
+@router.post("/comparer-embeddings")
+async def comparer_embeddings(requete: ComparerEmbeddingsRequest):
+    phrase_a = (requete.phrase_a or "").strip() or _PHRASE_A_DEFAUT
+    phrase_b = (requete.phrase_b or "").strip() or _PHRASE_B_DEFAUT
+
+    ids_choisis = [i for i in (requete.modeles_ids or []) if i in _IDS_EMBEDDINGS_AUTORISES]
+    modeles_a_comparer = (
+        [m for m in _MODELES_EMBEDDINGS if m["id"] in ids_choisis] if ids_choisis else _MODELES_EMBEDDINGS
+    )
+
+    resultats = []
+    for m in modeles_a_comparer:
+        debut = time.monotonic()
+        vecteur_a = await ollama.embed(m["id"], phrase_a)
+        vecteur_b = await ollama.embed(m["id"], phrase_b)
+        duree = time.monotonic() - debut
+        resultats.append(
+            {
+                "id": m["id"],
+                "nom": m["nom"],
+                "parametres_millions": m["parametres_millions"],
+                "duree_secondes": round(duree, 2),
+                "dimension_vecteur": len(vecteur_a),
+                "similarite_cosinus": round(_cosine(vecteur_a, vecteur_b), 4),
+            }
+        )
+
+    return {"phrase_a": phrase_a, "phrase_b": phrase_b, "resultats": resultats}

@@ -230,3 +230,21 @@ export async function comparerModeles(prompt?: string, modelesIds?: string[]) {
   }
   return r.json()
 }
+
+export async function listerModelesEmbeddings() {
+  const r = await fetch(`${BASE}/simulateur/modeles-embeddings`)
+  return r.json()
+}
+
+export async function comparerEmbeddings(phraseA?: string, phraseB?: string, modelesIds?: string[]) {
+  const r = await fetch(`${BASE}/simulateur/comparer-embeddings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phrase_a: phraseA || null, phrase_b: phraseB || null, modeles_ids: modelesIds || null }),
+  })
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(err.detail || 'Erreur pendant la comparaison des embeddings')
+  }
+  return r.json()
+}
