@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { listerVideos } from '../api/client'
 
 export default function Videos() {
@@ -43,10 +43,23 @@ export default function Videos() {
                 <div key={id} className={ouvert ? 'template-carte ouverte' : 'template-carte'}>
                   <button className="template-entete" onClick={() => setSchemaOuvert(ouvert ? null : id)}>
                     <strong>{s.titre}</strong>
-                    <span>Cliquez pour voir l'explication</span>
+                    <span>Cliquez pour voir le schéma et l'explication</span>
                   </button>
                   {ouvert && (
                     <div className="template-details">
+                      {s.schema?.length > 0 && (
+                        <div className="schema-flow">
+                          {s.schema.map((etape: any, j: number) => (
+                            <Fragment key={j}>
+                              <div className="schema-etape">
+                                <div className="schema-icone">{etape.icone}</div>
+                                <div className="schema-label">{etape.label}</div>
+                              </div>
+                              {j < s.schema.length - 1 && <div className="schema-fleche">→</div>}
+                            </Fragment>
+                          ))}
+                        </div>
+                      )}
                       <p>{s.explication}</p>
                     </div>
                   )}

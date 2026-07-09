@@ -21,6 +21,16 @@ VIDEOS = [
         "schemas": [
             {
                 "titre": "RAG correctif : la vérification fait partie du graphe",
+                "schema": [
+                    {"icone": "❓", "label": "Question"},
+                    {"icone": "🔀", "label": "Aiguillage"},
+                    {"icone": "📄", "label": "Recherche docs"},
+                    {"icone": "✅", "label": "Notation docs"},
+                    {"icone": "🌐", "label": "Web (si besoin)"},
+                    {"icone": "🧠", "label": "Génération"},
+                    {"icone": "🔁", "label": "Vérifications"},
+                    {"icone": "✅", "label": "Réponse"},
+                ],
                 "explication": (
                     "Ce schéma illustre un RAG « correctif » (Corrective RAG) : contrairement au RAG "
                     "simple de ce site (une seule recherche, une seule réponse), ici chaque étape est "
@@ -41,6 +51,12 @@ VIDEOS = [
             },
             {
                 "titre": "Qui fait la vérification : un LLM ou un humain",
+                "schema": [
+                    {"icone": "📤", "label": "Action proposée"},
+                    {"icone": "🔀", "label": "Contrôleur (LLM ou humain)"},
+                    {"icone": "✅✏️❌", "label": "Approuver / Modifier / Rejeter"},
+                    {"icone": "▶️", "label": "Exécution"},
+                ],
                 "explication": (
                     "Une fois qu'on a décidé de vérifier « dans la boucle », reste à choisir qui "
                     "vérifie. Deux approches complémentaires, montrées côte à côte : le « LLM in the "
@@ -59,6 +75,13 @@ VIDEOS = [
             },
             {
                 "titre": "Un agent concret : trier des mails de candidature",
+                "schema": [
+                    {"icone": "📧", "label": "Mail reçu"},
+                    {"icone": "🧠", "label": "LLM classifieur"},
+                    {"icone": "🚪", "label": "Éval. in-the-loop"},
+                    {"icone": "🤖", "label": "Agent (Goal + Environment)"},
+                    {"icone": "✅", "label": "Action exécutée"},
+                ],
                 "explication": (
                     "Un exemple d'agent complet qui assemble tout ce qui précède, avec les 4 façons "
                     "d'évaluer un agent réunies sur un seul schéma. Un premier LLM, léger, se contente "
@@ -83,6 +106,13 @@ VIDEOS = [
             },
             {
                 "titre": "Évaluer un agent à 3 niveaux, pas juste sa réponse finale",
+                "schema": [
+                    {"icone": "❓", "label": "Tâche"},
+                    {"icone": "🤔", "label": "Le LLM réfléchit"},
+                    {"icone": "🛠️", "label": "Appelle un outil"},
+                    {"icone": "🔁", "label": "Répète si besoin"},
+                    {"icone": "✅", "label": "Réponse finale"},
+                ],
                 "explication": (
                     "Ce schéma reprend exactement la boucle ReAct enseignée dans le Parcours de ce "
                     "site (l'agent décide d'utiliser un outil, observe le résultat, recommence) — "
@@ -100,6 +130,13 @@ VIDEOS = [
             },
             {
                 "titre": "Guardrails : des garde-fous avant ET après le LLM",
+                "schema": [
+                    {"icone": "📝", "label": "Prompt"},
+                    {"icone": "🛡️", "label": "Input Guard"},
+                    {"icone": "🧠", "label": "LLM"},
+                    {"icone": "🛡️", "label": "Output Guard"},
+                    {"icone": "✅", "label": "Réponse"},
+                ],
                 "explication": (
                     "Ce schéma (inspiré du projet open-source guardrails-ai) résume une architecture "
                     "de garde-fous en 2 temps, autour d'un appel LLM classique (Prompt → LLM → "
