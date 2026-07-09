@@ -1,3 +1,37 @@
+/* Police auto-hébergée (fichiers dans frontend/public/fonts, servis en same-origin — aucune
+   modification de CSP nécessaire, contrairement à une police chargée depuis un CDN tiers). */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-700.woff2') format('woff2');
+}
+
 :root {
   --bg: #0f1115;
   --bg-alt: #171a21;
@@ -8,7 +42,29 @@
   --border: #2a2e38;
   --danger: #ff6b6b;
   --success: #4ade80;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Couleurs des 5 catégories de briques (Constructeur) — vives sur fond sombre, où le
+     contraste est déjà suffisant. */
+  --cat-source: #38bdf8;
+  --cat-traitement: #a78bfa;
+  --cat-stockage: #facc15;
+  --cat-modele: #4ade80;
+  --cat-outil: #fb923c;
+  /* Fond "papier" dédié à la lecture d'un long texte (réponse générée, modal de résultat) —
+     toujours clair, quel que soit le thème sombre/doux, pour un confort de lecture proche
+     d'une page imprimée plutôt que d'un bloc d'interface. */
+  --bg-papier: #f7f4ee;
+  --fg-papier: #24262b;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  font-size: 15.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+p {
+  line-height: 1.6;
 }
 
 /* --- Thème "doux" : crème / marron, plus chaleureux et invitant --- */
@@ -22,6 +78,16 @@
   --border: #ddc9a6;
   --danger: #b8462f;
   --success: #6f8a4e;
+  /* Versions assombries/plus saturées pour rester lisibles sur le fond crème clair — les
+     couleurs vives d'origine (vert clair, moutarde...) s'y voyaient mal, signalé par un
+     utilisateur. */
+  --cat-source: #0369a1;
+  --cat-traitement: #6d28d9;
+  --cat-stockage: #92400e;
+  --cat-modele: #15803d;
+  --cat-outil: #c2410c;
+  --bg-papier: #fffdf8;
+  --fg-papier: #4a3324;
 }
 
 :root[data-theme='doux'] body {
@@ -344,15 +410,30 @@ button:disabled {
 }
 
 .modal {
-  width: min(640px, 100%);
-  max-height: min(80vh, 720px);
+  width: min(880px, 92vw);
+  max-height: min(85vh, 860px);
   overflow-y: auto;
-  background: var(--bg-alt);
+  background: var(--bg-papier);
+  color: var(--fg-papier);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 1.8rem;
+  padding: 2rem 2.2rem;
   position: relative;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.modal h3,
+.modal h4 {
+  color: var(--fg-papier);
+}
+
+.modal .texte-muted,
+.modal .drawer-close {
+  color: #6b7280;
+}
+
+.modal .traduction-cible {
+  background: rgba(0, 0, 0, 0.035);
 }
 
 @media (max-width: 480px) {
@@ -591,6 +672,18 @@ button:disabled {
   border-left-width: 3px;
 }
 
+.cat-source { color: var(--cat-source); }
+.cat-traitement { color: var(--cat-traitement); }
+.cat-stockage { color: var(--cat-stockage); }
+.cat-modele { color: var(--cat-modele); }
+.cat-outil { color: var(--cat-outil); }
+
+.cat-source-bordure { border-left-color: var(--cat-source); }
+.cat-traitement-bordure { border-left-color: var(--cat-traitement); }
+.cat-stockage-bordure { border-left-color: var(--cat-stockage); }
+.cat-modele-bordure { border-left-color: var(--cat-modele); }
+.cat-outil-bordure { border-left-color: var(--cat-outil); }
+
 .canvas {
   position: relative;
   border: 1px solid var(--border);
@@ -616,31 +709,27 @@ button:disabled {
   font-size: 1rem;
 }
 
-/* --- Scrollbars discrètes pour les panneaux internes (sidebar templates, palette) --- */
-.templates-sidebar,
-.palette {
+/* --- Scrollbars discrètes, généralisées à toute la page (plus seulement palette/sidebar) --- */
+* {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
-.templates-sidebar::-webkit-scrollbar,
-.palette::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
-.templates-sidebar::-webkit-scrollbar-track,
-.palette::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.templates-sidebar::-webkit-scrollbar-thumb,
-.palette::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: var(--border);
   border-radius: 999px;
 }
 
-.templates-sidebar::-webkit-scrollbar-thumb:hover,
-.palette::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background-color: var(--accent);
 }
 
@@ -1017,7 +1106,12 @@ button:disabled {
 .traduction-cible {
   margin: 0;
   font-size: 1.05rem;
-  color: var(--fg);
+  line-height: 1.6;
+  color: var(--fg-papier);
+  background: var(--bg-papier);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
 }
 
 .phrase-chip {

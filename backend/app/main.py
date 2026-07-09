@@ -56,8 +56,20 @@ _FRONTEND_DIST = Path(__file__).parent.parent / "static"
 if _FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="assets")
 
-    # Route "catch-all" : toute URL qui n'est ni /api/* ni /assets/* sert index.html, pour que
-    # React Router puisse gérer la navigation directe vers une route (ex: /constructeur, F5).
+    # Route "catch-all" : sert le fichier statique demandé s'il existe réellement (ex: une
+    # police dans /fonts, copiée depuis frontend/public par Vite), sinon retombe sur
+    # index.html pour que React Router gère la navigation directe vers une route (ex:
+    # /constructeur, F5). Sans cette vérification d'existence, un fichier statique hors
+    # /assets (comme les polices) recevait silencieusement index.html à la place.
+    # mimetypes ne connaît pas toujours .woff2 (dépend de l'OS/l'image) : sans type MIME
+    # correct, X-Content-Type-Options: nosniff peut suffire à faire refuser la police par
+    # le navigateur, qui la charge alors silencieusement en fallback vers la police système.
+    _TYPES_MIME_SUPPLEMENTAIRES = {".woff2": "font/woff2", ".woff": "font/woff"}
+
     @app.get("/{chemin_complet:path}")
     def frontend_spa(chemin_complet: str):
+        chemin_fichier = _FRONTEND_DIST / chemin_complet
+        if chemin_fichier.is_file() and chemin_fichier.resolve().is_relative_to(_FRONTEND_DIST.resolve()):
+            media_type = _TYPES_MIME_SUPPLEMENTAIRES.get(chemin_fichier.suffix)
+            return FileResponse(chemin_fichier, media_type=media_type)
         return FileResponse(_FRONTEND_DIST / "index.html")

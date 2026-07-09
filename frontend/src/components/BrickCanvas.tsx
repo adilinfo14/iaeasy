@@ -260,14 +260,13 @@ const CanvasInterne = forwardRef<BrickCanvasHandle, Props>(function CanvasIntern
         <p className="texte-muted">Cliquez une brique pour l'ajouter au canvas et voir sa définition.</p>
         {grouperParCategorie(composants).map((groupe) => (
           <div key={groupe.categorie} className="palette-groupe">
-            <span className="palette-groupe-titre" style={{ color: COULEURS_CATEGORIE[groupe.categorie] }}>
+            <span className={`palette-groupe-titre cat-${groupe.categorie}`}>
               {LABEL_CATEGORIE[groupe.categorie] || groupe.categorie}
             </span>
             {groupe.items.map((c) => (
               <button
                 key={c.id}
-                className="palette-brique"
-                style={{ borderLeftColor: COULEURS_CATEGORIE[groupe.categorie] }}
+                className={`palette-brique cat-${groupe.categorie}-bordure`}
                 onClick={() => ajouterNoeud(c)}
               >
                 {c.icone} {c.titre}
