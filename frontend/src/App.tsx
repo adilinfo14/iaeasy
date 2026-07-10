@@ -14,6 +14,7 @@ import Parcours from './pages/Parcours'
 import Securite from './pages/Securite'
 import Simulateur from './pages/Simulateur'
 import StrategieTest from './pages/StrategieTest'
+import Theatre from './pages/Theatre'
 import Videos from './pages/Videos'
 
 const GROUPES_MENU = [
@@ -37,6 +38,7 @@ const GROUPES_MENU = [
       { to: '/glossaire', label: 'Glossaire' },
       { to: '/metiers', label: 'Mon métier' },
       { to: '/videos', label: 'Vidéos' },
+      { to: '/theatre', label: 'Théâtre' },
     ],
   },
 ]
@@ -153,6 +155,7 @@ export default function App() {
           <Route path="/metiers" element={<Metiers />} />
           <Route path="/simulateur" element={<Simulateur />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/theatre" element={<Theatre />} />
           <Route path="/avis" element={<Avis />} />
           <Route path="/admin" element={<AdminReglages />} />
         </Routes>

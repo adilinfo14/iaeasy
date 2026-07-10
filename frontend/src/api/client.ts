@@ -369,3 +369,48 @@ export async function modifierReglagesAdmin(motDePasse: string, reglages: Reglag
   }
   return r.json()
 }
+
+export async function listerEpisodesTheatre() {
+  const r = await fetch(`${BASE}/theatre/episodes`)
+  return r.json()
+}
+
+export async function lireEpisodeTheatre(id: string) {
+  const r = await fetch(`${BASE}/theatre/episodes/${id}`)
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(messageErreur(err, "Erreur pendant la lecture de l'histoire"))
+  }
+  return r.json()
+}
+
+export async function demarrerGenerationTheatre() {
+  const r = await fetch(`${BASE}/theatre/generer`, { method: 'POST' })
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(messageErreur(err, "Erreur pendant le lancement de la génération"))
+  }
+  return r.json()
+}
+
+export async function statutGenerationTheatre(jobId: string) {
+  const r = await fetch(`${BASE}/theatre/generer/${jobId}`)
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(messageErreur(err, "Erreur pendant la génération de l'histoire"))
+  }
+  return r.json()
+}
+
+// Interroge le job toutes les 1,5s jusqu'à ce que l'épisode soit prêt — plutôt qu'une seule
+// requête bloquante (~45s), ce qui survit à un changement d'onglet/d'application sur mobile
+// pendant la génération (le traitement continue côté serveur quoi qu'il arrive au client).
+export async function genererEpisodeTheatre() {
+  const { job_id } = await demarrerGenerationTheatre()
+  while (true) {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const statut = await statutGenerationTheatre(job_id)
+    if (statut.status === 'termine') return statut.episode
+    if (statut.status === 'erreur') throw new Error(statut.erreur || 'Erreur pendant la génération.')
+  }
+}
