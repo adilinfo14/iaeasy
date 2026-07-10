@@ -79,9 +79,12 @@ def _instruction(sujet: str) -> str:
         "différentes à chaque fois.\n\n"
         f"Sujet imposé : {sujet}\n\n"
         f"Style d'ouverture imposé pour la première réplique : {style}\n\n"
-        "Structure exactement 2 scènes de 4 répliques chacune (8 répliques au total), en "
-        "alternant Clio et Marco. Chaque scène choisit UN décor dans cette liste fermée (jamais "
-        f"un autre mot) : {', '.join(DECORS)}.\n\n"
+        "Structure OBLIGATOIRE : exactement 2 scènes, exactement 4 répliques dans CHAQUE scène "
+        "(8 répliques au total, jamais moins) — une histoire trop courte est incompréhensible, "
+        "ne t'arrête jamais avant la 4e réplique d'une scène. Alterne Clio et Marco.\n\n"
+        "Choisis UN SEUL décor pour tout l'épisode (le MÊME dans les 2 scènes — ne change jamais "
+        "de décor en cours d'histoire, ça ne doit décrire qu'un seul lieu/une seule ambiance), "
+        f"dans cette liste fermée (jamais un autre mot) : {', '.join(DECORS)}.\n\n"
         "Chaque réplique porte aussi un champ \"emotion\" reflétant ce que RESSENT le personnage "
         f"en la prononçant, choisie dans cette liste fermée (jamais un autre mot) : {', '.join(EMOTIONS)}. "
         "Varie les émotions selon le contenu réel de la réplique (un fait terrible = triste ou "
@@ -105,21 +108,40 @@ def _instruction(sujet: str) -> str:
 _CARACTERES_NON_LATINS = re.compile(r"[一-鿿぀-ヿ가-힯Ѐ-ӿ]")
 
 
+# Bugs réels trouvés en conditions réelles ("on ne comprend pas l'histoire du tout") : le modèle
+# a un jour renvoyé seulement 2 répliques dans une scène au lieu de 4 (histoire tronquée, abrupte)
+# ET changé de décor entre les 2 scènes d'un même récit continu (une traversée océanique qui
+# bascule sur une plaine venteuse en 2e scène) — les deux structurellement valides selon l'ancien
+# schéma (Pydantic/JSON n'imposait qu'un décor par scène, sans borne sur le nombre de répliques
+# ni de contrainte inter-scènes), mais racontant quelque chose d'incohérent. D'où les 2 contrôles
+# ci-dessous, en plus de la consigne renforcée dans le prompt — la consigne seule ne suffit pas.
+_MIN_REPLIQUES_PAR_SCENE = 4
+
+
 def _valider_episode(data: dict) -> dict:
     if not isinstance(data.get("titre"), str) or not data["titre"].strip():
         raise ValueError("titre manquant")
     scenes = data.get("scenes")
-    if not isinstance(scenes, list) or not scenes:
-        raise ValueError("scenes manquantes")
+    if not isinstance(scenes, list) or len(scenes) < 2:
+        raise ValueError("il faut au moins 2 scènes")
 
     scenes_validees = []
+    decor_episode = None
     for scene in scenes:
         decor = scene.get("decor")
         if decor not in DECORS:
             raise ValueError(f"décor inconnu : {decor}")
+        if decor_episode is None:
+            decor_episode = decor
+        elif decor != decor_episode:
+            raise ValueError(f"décor incohérent entre les scènes : {decor_episode} puis {decor}")
+
         repliques = scene.get("repliques")
-        if not isinstance(repliques, list) or not repliques:
-            raise ValueError("répliques manquantes")
+        if not isinstance(repliques, list) or len(repliques) < _MIN_REPLIQUES_PAR_SCENE:
+            raise ValueError(
+                f"scène trop courte ({len(repliques) if isinstance(repliques, list) else 0} répliques, "
+                f"minimum {_MIN_REPLIQUES_PAR_SCENE}) — histoire tronquée"
+            )
         repliques_validees = []
         for r in repliques:
             personnage = r.get("personnage")
@@ -173,7 +195,10 @@ async def _executer_generation(job_id: str) -> None:
     sujet = secrets.choice(_SUJETS)
     episode_final = None
 
-    for _ in range(2):  # 1 essai + 1 nouvel essai si le JSON est mal formé
+    # La validation plus stricte (2 scènes, 4 répliques min., décor unique) rejette plus souvent
+    # qu'avant — 3 essais plutôt que 2 pour ne pas trop souvent retomber sur le repli, sans
+    # jamais assouplir les contrôles qui garantissent une histoire compréhensible.
+    for _ in range(3):
         try:
             brut = await ollama.generate(_MODELE_CONTEUR, _instruction(sujet))
             match = re.search(r"\{.*\}", brut, re.DOTALL)
