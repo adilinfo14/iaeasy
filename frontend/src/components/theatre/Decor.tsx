@@ -2,17 +2,20 @@ import { useMemo } from 'react'
 
 const SILHOUETTES: Record<string, JSX.Element> = {
   plaine_venteuse: (
+    // Les personnages occupent environ 8%-46% et 54%-92% de la largeur (soit ~64-368 et
+    // 432-736 sur 800) : tout accent décoratif doit rester dans la bande centrale étroite
+    // (368-432) ou tout en haut du ciel, jamais à hauteur de visage dans ces deux zones —
+    // un premier essai y plaçait des nuages qui créaient des halos derrière les têtes.
     <svg viewBox="0 0 800 300" className="decor-silhouette" preserveAspectRatio="xMidYMax slice">
-      <circle cx="650" cy="70" r="45" fill="#fff6da" opacity="0.85" />
+      <circle cx="650" cy="45" r="40" fill="#fff6da" opacity="0.85" />
       <path d="M0 220 Q200 190 400 215 T800 205 V300 H0 Z" fill="#c9a86a" />
       <path d="M0 250 Q200 230 400 248 T800 240 V300 H0 Z" fill="#a9863f" />
-      <g className="decor-avion" transform="translate(300,120)">
-        <ellipse cx="0" cy="0" rx="55" ry="7" fill="#e8e2d0" />
-        <ellipse cx="0" cy="-14" rx="38" ry="6" fill="#d8d0ba" />
-        <rect x="-6" y="-4" width="12" height="16" fill="#8a8060" />
+      <g className="decor-avion" transform="translate(400,90)">
+        <ellipse cx="0" cy="0" rx="55" ry="7" fill="#c9c0a0" />
+        <ellipse cx="0" cy="-14" rx="38" ry="6" fill="#b8ac86" />
+        <rect x="-6" y="-4" width="12" height="16" fill="#6b6248" />
       </g>
-      <ellipse cx="120" cy="60" rx="50" ry="16" fill="#fff" opacity="0.55" />
-      <ellipse cx="600" cy="140" rx="60" ry="18" fill="#fff" opacity="0.4" />
+      <ellipse cx="60" cy="30" rx="40" ry="13" fill="#fff" opacity="0.5" />
     </svg>
   ),
   chantier_urbain: (
@@ -41,9 +44,9 @@ const SILHOUETTES: Record<string, JSX.Element> = {
         <rect key={`c${i}`} x={i * 82 - 12} y="135" width="24" height="18" fill="#3a2420" />
       ))}
       <rect x="360" y="70" width="70" height="130" fill="#2c1a18" />
-      <path className="decor-flamme" d="M100 150 Q110 120 100 100 Q90 120 100 150 Z" fill="#ff8a3d" />
-      <path className="decor-flamme" d="M500 150 Q512 115 500 90 Q488 115 500 150 Z" fill="#ff6a2d" style={{ animationDelay: '0.6s' }} />
-      <path className="decor-flamme" d="M650 150 Q660 122 650 105 Q640 122 650 150 Z" fill="#ffab3d" style={{ animationDelay: '1.1s' }} />
+      <path className="decor-flamme" d="M30 150 Q40 120 30 100 Q20 120 30 150 Z" fill="#ff8a3d" />
+      <path className="decor-flamme" d="M400 150 Q412 115 400 90 Q388 115 400 150 Z" fill="#ff6a2d" style={{ animationDelay: '0.6s' }} />
+      <path className="decor-flamme" d="M770 150 Q780 122 770 105 Q760 122 770 150 Z" fill="#ffab3d" style={{ animationDelay: '1.1s' }} />
     </svg>
   ),
   espace_etoiles: (
@@ -53,7 +56,7 @@ const SILHOUETTES: Record<string, JSX.Element> = {
       <circle cx="142" cy="82" r="4" fill="#c9c9d4" opacity="0.6" />
       <path d="M0 260 Q200 230 400 250 T800 245 V300 H0 Z" fill="#8f97ad" />
       <path d="M0 280 Q200 260 400 275 T800 270 V300 H0 Z" fill="#6b7390" />
-      <g className="decor-module" transform="translate(560,200)">
+      <g className="decor-module" transform="translate(400,220)">
         <rect x="-20" y="-20" width="40" height="30" fill="#d8d8d8" />
         <line x1="-25" y1="10" x2="-30" y2="30" stroke="#aaa" strokeWidth="4" />
         <line x1="25" y1="10" x2="30" y2="30" stroke="#aaa" strokeWidth="4" />
@@ -72,7 +75,7 @@ const SILHOUETTES: Record<string, JSX.Element> = {
           />
         </g>
       ))}
-      <ellipse cx="150" cy="200" rx="16" ry="10" fill="#ffd873" opacity="0.5" className="decor-lueur" />
+      <ellipse cx="400" cy="205" rx="16" ry="10" fill="#ffd873" opacity="0.5" className="decor-lueur" />
     </svg>
   ),
   temple_antique: (
@@ -101,10 +104,10 @@ const SILHOUETTES: Record<string, JSX.Element> = {
       <rect x="60" y="160" width="140" height="140" fill="#3a3230" />
       <rect x="220" y="190" width="180" height="110" fill="#2c2624" />
       <rect x="420" y="150" width="150" height="150" fill="#3a3230" />
-      <rect x="100" y="90" width="24" height="80" fill="#2c2624" />
-      <rect x="460" y="80" width="24" height="80" fill="#2c2624" />
-      <ellipse className="decor-fumee" cx="112" cy="80" rx="20" ry="14" fill="#6b6560" opacity="0.6" />
-      <ellipse className="decor-fumee" cx="472" cy="70" rx="24" ry="16" fill="#6b6560" opacity="0.55" style={{ animationDelay: '1s' }} />
+      <rect x="30" y="90" width="24" height="80" fill="#2c2624" />
+      <rect x="390" y="80" width="24" height="80" fill="#2c2624" />
+      <ellipse className="decor-fumee" cx="42" cy="80" rx="20" ry="14" fill="#6b6560" opacity="0.6" />
+      <ellipse className="decor-fumee" cx="402" cy="70" rx="24" ry="16" fill="#6b6560" opacity="0.55" style={{ animationDelay: '1s' }} />
     </svg>
   ),
 }

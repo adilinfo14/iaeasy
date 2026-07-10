@@ -7,6 +7,8 @@ const NOMS = { clio: 'Clio', marco: 'Marco' }
 const VITESSE_FRAPPE_MS = 22
 const PAUSE_APRES_LIGNE_MS = 1100
 
+const VOIX_SUPPORTEE = typeof window !== 'undefined' && 'speechSynthesis' in window
+
 export default function Theatre() {
   const [liste, setListe] = useState<any[]>([])
   const [episode, setEpisode] = useState<any>(null)
@@ -17,11 +19,24 @@ export default function Theatre() {
   const [termine, setTermine] = useState(false)
   const [chargement, setChargement] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [sonActif, setSonActif] = useState(VOIX_SUPPORTEE)
 
   const minuteurRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const voixFrRef = useRef<SpeechSynthesisVoice[]>([])
 
   useEffect(() => {
     listerEpisodesTheatre().then(setListe)
+
+    if (!VOIX_SUPPORTEE) return
+    function chargerVoix() {
+      voixFrRef.current = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith('fr'))
+    }
+    chargerVoix()
+    window.speechSynthesis.addEventListener('voiceschanged', chargerVoix)
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', chargerVoix)
+      window.speechSynthesis.cancel()
+    }
   }, [])
 
   function nettoyerMinuteur() {
@@ -31,6 +46,7 @@ export default function Theatre() {
 
   const demarrerEpisode = useCallback((e: any) => {
     nettoyerMinuteur()
+    if (VOIX_SUPPORTEE) window.speechSynthesis.cancel()
     setEpisode(e)
     setSceneIndex(0)
     setLigneIndex(0)
@@ -69,7 +85,9 @@ export default function Theatre() {
   const ligneCourante = episode?.scenes?.[sceneIndex]?.repliques?.[ligneIndex]
   const decorCourant = episode?.scenes?.[sceneIndex]?.decor
 
-  // Effet machine à écrire : ré-affiche la réplique courante caractère par caractère.
+  // Effet machine à écrire : ré-affiche la réplique courante caractère par caractère, et la
+  // fait lire à voix haute (Web Speech API — navigateur uniquement, aucun serveur impliqué) :
+  // Clio et Marco reçoivent chacun une voix/hauteur différente pour rester distinguables.
   useEffect(() => {
     if (!ligneCourante) return
     setTexteAffiche('')
@@ -80,9 +98,23 @@ export default function Theatre() {
       setTexteAffiche(texte.slice(0, i))
       if (i >= texte.length) clearInterval(id)
     }, VITESSE_FRAPPE_MS)
+
+    if (VOIX_SUPPORTEE && sonActif) {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(texte)
+      utterance.lang = 'fr-FR'
+      const voix = voixFrRef.current
+      if (voix.length > 0) {
+        utterance.voice = ligneCourante.personnage === 'clio' ? voix[0] : voix[voix.length - 1]
+      }
+      utterance.pitch = ligneCourante.personnage === 'clio' ? 1.25 : 0.8
+      utterance.rate = 1.02
+      window.speechSynthesis.speak(utterance)
+    }
+
     return () => clearInterval(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [episode, sceneIndex, ligneIndex])
+  }, [episode, sceneIndex, ligneIndex, sonActif])
 
   function avancer() {
     if (!episode) return
@@ -109,6 +141,12 @@ export default function Theatre() {
     }
     setTermine(false)
   }
+
+  useEffect(() => {
+    if (!VOIX_SUPPORTEE) return
+    if (enPause) window.speechSynthesis.pause()
+    else window.speechSynthesis.resume()
+  }, [enPause])
 
   // Avance automatique une fois la réplique entièrement affichée, sauf en pause.
   useEffect(() => {
@@ -151,8 +189,20 @@ export default function Theatre() {
           {decorCourant && <Decor key={`${sceneIndex}-${decorCourant}`} decor={decorCourant} />}
 
           <div className="theatre-personnages">
-            <Personnage type="clio" parle={ligneCourante?.personnage === 'clio'} actif={!termine} />
-            <Personnage type="marco" parle={ligneCourante?.personnage === 'marco'} actif={!termine} />
+            <Personnage
+              type="clio"
+              decor={decorCourant}
+              parle={ligneCourante?.personnage === 'clio'}
+              actif={!termine}
+              variante={ligneIndex % 2 === 0}
+            />
+            <Personnage
+              type="marco"
+              decor={decorCourant}
+              parle={ligneCourante?.personnage === 'marco'}
+              actif={!termine}
+              variante={ligneIndex % 2 === 0}
+            />
           </div>
 
           {!termine && ligneCourante && (
@@ -176,9 +226,20 @@ export default function Theatre() {
             <button onClick={avancer} disabled={termine}>
               Suivant ▶
             </button>
+            {VOIX_SUPPORTEE && (
+              <button
+                onClick={() => {
+                  setSonActif((s) => !s)
+                  window.speechSynthesis.cancel()
+                }}
+              >
+                {sonActif ? '🔊 Son' : '🔇 Muet'}
+              </button>
+            )}
             <button
               onClick={() => {
                 nettoyerMinuteur()
+                if (VOIX_SUPPORTEE) window.speechSynthesis.cancel()
                 setEpisode(null)
               }}
             >

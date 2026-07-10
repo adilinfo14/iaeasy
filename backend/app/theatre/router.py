@@ -47,15 +47,33 @@ _SCHEMA_ATTENDU = (
     + '", "repliques": [{"personnage": "clio" ou "marco", "texte": "..."}, ...]}, ...]}'
 )
 
+# Un prompt trop rigide produisait toujours la même mécanique conversationnelle (Clio demande
+# "peux-tu m'expliquer... ?", Marco répond "c'est un véritable exploit...") d'une génération à
+# l'autre, même sur des sujets différents — signalé en conditions réelles ("toujours les mêmes
+# textes"). Un style d'ouverture tiré au sort à chaque génération casse ce moule.
+_STYLES_OUVERTURE = [
+    "Marco lance une phrase surprenante ou un chiffre marquant AVANT même que Clio ne dise quoi que ce soit.",
+    "Clio commence en réagissant à ce qu'elle voit ou ressent dans ce décor précis, avant de poser sa question.",
+    "Clio commence par une objection ou un doute (« ça semble impossible » / « je ne te crois pas »), que Marco doit lever.",
+    "Marco commence par une question rhétorique piège posée à Clio, pour la surprendre.",
+    "La scène démarre in medias res, comme si Clio et Marco étaient déjà en plein débat animé sur le sujet.",
+    "Clio commence par comparer ce sujet à quelque chose de la vie quotidienne moderne, avant que Marco ne corrige ou complète.",
+]
+
 
 def _instruction(sujet: str) -> str:
+    style = secrets.choice(_STYLES_OUVERTURE)
     return (
         "Tu écris un court dialogue théâtral, en français, entre deux personnages qui racontent "
         "un événement historique RÉEL et bien documenté à un public. Reste factuellement exact — "
         "n'invente aucun événement, aucune date, aucun personnage.\n\n"
         "Personnages : Clio (curieuse, pose des questions, s'étonne) et Marco (le conteur, sait, "
-        "explique avec plaisir et un peu de dramatisation).\n\n"
+        "explique avec plaisir et un peu de dramatisation). Varie leurs formulations d'une "
+        "génération à l'autre : évite de toujours faire démarrer Clio par « Marco, peux-tu "
+        "m'expliquer... » ou Marco par « C'est un véritable exploit... » — invente des tournures "
+        "différentes à chaque fois.\n\n"
         f"Sujet imposé : {sujet}\n\n"
+        f"Style d'ouverture imposé pour la première réplique : {style}\n\n"
         "Structure exactement 2 scènes de 4 répliques chacune (8 répliques au total), en "
         "alternant Clio et Marco. Chaque scène choisit UN décor dans cette liste fermée (jamais "
         f"un autre mot) : {', '.join(DECORS)}.\n\n"

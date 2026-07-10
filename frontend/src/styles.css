@@ -2479,19 +2479,28 @@ button:disabled {
   animation-delay: 0.6s;
 }
 
+/* Fin d'histoire : un fondu discret plutôt qu'un passage en gris qui donnait l'impression d'un
+   bug (signalé en conditions réelles) — les personnages gardent leurs couleurs. */
 .personnage-inactif {
-  opacity: 0.55;
-  filter: grayscale(0.5);
+  opacity: 0.8;
 }
 
 .personnage-actif.personnage-inactif {
   opacity: 1;
-  filter: none;
 }
 
 @keyframes personnage-idle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(-1.2deg); }
+}
+
+@keyframes personnage-idle-variante {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(1.5deg); }
+}
+
+.personnage-variante-b {
+  animation-name: personnage-idle-variante;
 }
 
 .personnage-svg {

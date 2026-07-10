@@ -2,20 +2,50 @@ type Props = {
   type: 'clio' | 'marco'
   parle: boolean
   actif: boolean
+  decor?: string
+  variante?: boolean
+}
+
+// Une couleur de robe par décor (donc par époque/ambiance) plutôt qu'une couleur fixe : Clio et
+// Marco changent d'allure d'une histoire à l'autre — et même de scène à scène — au lieu de
+// toujours porter exactement les mêmes teintes.
+const COULEURS_PAR_DECOR: Record<string, { clio: string; marco: string }> = {
+  plaine_venteuse: { clio: '#c17a4a', marco: '#3a5f7a' },
+  chantier_urbain: { clio: '#a8522e', marco: '#2c4a5e' },
+  siege_medieval: { clio: '#8f2d20', marco: '#4a2318' },
+  espace_etoiles: { clio: '#6a5a9a', marco: '#233a6b' },
+  ville_medievale_sombre: { clio: '#5a6b4a', marco: '#2c3a2c' },
+  temple_antique: { clio: '#b5872f', marco: '#5c4522' },
+  ocean_exploration: { clio: '#2f7a6b', marco: '#1a4a5c' },
+  revolution_industrielle: { clio: '#8a4a2e', marco: '#3a3230' },
+}
+const COULEURS_DEFAUT = { clio: '#b45f3a', marco: '#2c3e6b' }
+
+function assombrir(hex: string, facteur = 0.72): string {
+  const n = parseInt(hex.slice(1), 16)
+  const r = Math.round(((n >> 16) & 255) * facteur)
+  const g = Math.round(((n >> 8) & 255) * facteur)
+  const b = Math.round((n & 255) * facteur)
+  return `rgb(${r}, ${g}, ${b})`
 }
 
 // Deux personnages simples et distincts (silhouette illustrée, pas photoréaliste) : Clio la
-// curieuse (robe terracotta, chignon, tient un livre) et Marco le conteur (robe bleu nuit,
-// capuche, tient une lanterne). La bouche s'anime en boucle pendant la réplique de ce
-// personnage (classe .parle), l'autre s'assombrit légèrement pour indiquer qui a la parole.
-export default function Personnage({ type, parle, actif }: Props) {
+// curieuse (chignon, tient un livre) et Marco le conteur (capuche, tient une lanterne). La
+// bouche s'anime en boucle pendant la réplique de ce personnage (classe .parle).
+export default function Personnage({ type, parle, actif, decor, variante }: Props) {
   const estClio = type === 'clio'
-  const couleurRobe = estClio ? '#b45f3a' : '#2c3e6b'
-  const couleurRobeOmbre = estClio ? '#8f4a2c' : '#1e2b4f'
+  const palette = (decor && COULEURS_PAR_DECOR[decor]) || COULEURS_DEFAUT
+  const couleurRobe = estClio ? palette.clio : palette.marco
+  const couleurRobeOmbre = assombrir(couleurRobe)
+  const couleurCapuche = estClio ? '#4a2e1a' : couleurRobe
   const couleurPeau = '#e8b98a'
 
   return (
-    <div className={`personnage personnage-${type} ${actif ? 'personnage-actif' : 'personnage-inactif'}`}>
+    <div
+      className={`personnage personnage-${type} ${actif ? 'personnage-actif' : 'personnage-inactif'} ${
+        variante ? 'personnage-variante-a' : 'personnage-variante-b'
+      }`}
+    >
       <svg viewBox="0 0 200 300" className={parle ? 'personnage-svg personnage-parle' : 'personnage-svg'}>
         {/* Robe */}
         <path
@@ -31,50 +61,44 @@ export default function Personnage({ type, parle, actif }: Props) {
         {estClio ? (
           <>
             {/* Livre tenu par Clio */}
-            <rect x="28" y="222" width="26" height="20" rx="2" fill="#f2e4c8" stroke="#8f4a2c" strokeWidth="2" />
-            <line x1="41" y1="222" x2="41" y2="242" stroke="#8f4a2c" strokeWidth="1.5" />
+            <rect x="26" y="220" width="28" height="22" rx="2" fill="#f2e4c8" stroke="#8f4a2c" strokeWidth="2" />
+            <line x1="40" y1="220" x2="40" y2="242" stroke="#8f4a2c" strokeWidth="1.5" />
           </>
         ) : (
           <>
             {/* Lanterne tenue par Marco */}
-            <rect x="148" y="222" width="16" height="20" rx="2" fill="#3a3a3a" />
-            <circle cx="156" cy="230" r="7" fill="#ffd873" className="lanterne-lueur" />
+            <rect x="146" y="220" width="18" height="22" rx="2" fill="#3a3a3a" />
+            <circle cx="155" cy="229" r="7" fill="#ffd873" className="lanterne-lueur" />
           </>
         )}
 
         {/* Cou */}
         <rect x="90" y="118" width="20" height="18" fill={couleurPeau} />
 
-        {/* Tête */}
-        <circle cx="100" cy="90" r="42" fill={couleurPeau} />
+        {/* Capuche / coiffe (cercle plus large DERRIÈRE la tête — silhouette simple et fiable) */}
+        <circle cx="100" cy="88" r="52" fill={couleurCapuche} />
+        {estClio && <circle cx="100" cy="46" r="13" fill={couleurCapuche} />}
 
-        {estClio ? (
+        {/* Tête */}
+        <circle cx="100" cy="92" r="40" fill={couleurPeau} />
+
+        {!estClio && (
           <>
-            {/* Chignon + cheveux */}
-            <circle cx="100" cy="60" r="30" fill="#4a2e1a" />
-            <circle cx="100" cy="52" r="10" fill="#4a2e1a" />
-            <path d="M 60 90 Q 58 65 75 55" stroke="#4a2e1a" strokeWidth="10" fill="none" strokeLinecap="round" />
-            <path d="M 140 90 Q 142 65 125 55" stroke="#4a2e1a" strokeWidth="10" fill="none" strokeLinecap="round" />
-          </>
-        ) : (
-          <>
-            {/* Capuche */}
-            <path d="M 55 95 Q 50 30 100 25 Q 150 30 145 95 Q 148 60 100 55 Q 52 60 55 95 Z" fill={couleurRobe} />
-            {/* Barbe */}
-            <path d="M 75 105 Q 100 135 125 105 Q 100 120 75 105 Z" fill="#6b6b6b" />
+            {/* Barbe de Marco */}
+            <path d="M 74 108 Q 100 138 126 108 Q 100 122 74 108 Z" fill="#6b6b6b" />
           </>
         )}
 
         {/* Yeux */}
-        <ellipse cx="84" cy="88" rx="4.5" ry="6" fill="#2a2018" className="personnage-oeil" />
-        <ellipse cx="116" cy="88" rx="4.5" ry="6" fill="#2a2018" className="personnage-oeil" />
+        <ellipse cx="84" cy="90" rx="4.5" ry="6" fill="#2a2018" className="personnage-oeil" />
+        <ellipse cx="116" cy="90" rx="4.5" ry="6" fill="#2a2018" className="personnage-oeil" />
 
         {/* Sourcils */}
-        <path d="M 77 78 Q 84 74 91 78" stroke="#4a2e1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        <path d="M 109 78 Q 116 74 123 78" stroke="#4a2e1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M 77 80 Q 84 76 91 80" stroke="#4a2e1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M 109 80 Q 116 76 123 80" stroke="#4a2e1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
 
         {/* Bouche (anime pendant la réplique) */}
-        <ellipse cx="100" cy="108" rx="9" ry="4" fill="#8f4a3a" className="personnage-bouche" />
+        <ellipse cx="100" cy="110" rx="9" ry="4" fill="#8f4a3a" className="personnage-bouche" />
       </svg>
     </div>
   )
