@@ -10,6 +10,7 @@ services:
       - IAEASY_DATA_DIR=/data
       - IAEASY_ADMIN_PASSWORD=${IAEASY_ADMIN_PASSWORD}
       - HF_HOME=/data/hf_cache
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     volumes:
       - iaeasy_data:/data
       - ./backend/app:/app/app:ro

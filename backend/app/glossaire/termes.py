@@ -100,8 +100,111 @@ TERMES = [
     {
         "terme": "Chunking (découpage)",
         "categorie": "Architecture / agents",
-        "definition_simple": "Couper un long document en petits morceaux avant de le comparer à une question — un document entier est trop gros pour être comparé efficacement d'un coup.",
+        "definition_simple": (
+            "Couper un long document en petits morceaux avant de le comparer à une question — un document entier "
+            "est trop gros pour être comparé efficacement d'un coup. La façon de couper compte autant que la "
+            "taille : un découpage qui respecte les titres et les paragraphes garde chaque morceau compréhensible "
+            "seul, alors qu'un découpage à taille fixe risque de couper une idée en plein milieu."
+        ),
         "ou_le_voir": "Constructeur — brique Découpage (chunking)",
+    },
+    {
+        "terme": "Fil d'Ariane du chunk (titre hiérarchique)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Un morceau de texte découpé perd son contexte s'il ne garde que le titre juste au-dessus de lui : "
+            "répéter toute la chaîne des titres parents (« Section > Sous-section > Paragraphe ») dans chaque "
+            "morceau aide le modèle à savoir de quoi on parle même en lisant un fragment isolé, loin du reste "
+            "du document."
+        ),
+        "ou_le_voir": "Constructeur — brique Découpage (chunking)",
+    },
+    {
+        "terme": "Contenu IA-ready (structuration d'un document)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "La façon dont un contenu est écrit influence directement ce qu'une IA peut en tirer : des titres "
+            "clairs, une hiérarchie logique et des paragraphes qui se comprennent chacun isolément se découpent "
+            "et se retrouvent bien mieux qu'un texte continu sans structure. Rendre un contenu « IA-ready » se "
+            "prépare dès l'écriture, pas seulement au moment de le donner à un modèle."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Index vectoriel (IVF, HNSW...)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Au-delà d'une simple liste de vecteurs, un index vectoriel pré-organise les vecteurs par proximité "
+            "(en groupes ou en graphe de voisins) pour n'en comparer qu'une fraction à chaque recherche plutôt "
+            "que la totalité. Indispensable dès que la base dépasse quelques dizaines de milliers d'éléments, "
+            "au prix d'un compromis vitesse/exhaustivité à régler soi-même."
+        ),
+        "ou_le_voir": "Constructeur — brique Base vectorielle",
+    },
+    {
+        "terme": "Graphe de connaissances",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Un ensemble de concepts (les nœuds) reliés entre eux par des relations explicites (les arêtes), "
+            "plutôt qu'une simple liste de textes indépendants. Permet de représenter des hiérarchies et des "
+            "associations métier qu'un texte seul, même vectorisé, ne rend jamais explicites."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Relation typée (dans un graphe)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Toutes les relations d'un graphe ne se valent pas : certaines expriment une hiérarchie précise "
+            "(« est une catégorie de »), d'autres une simple association vague sans notion de catégorie. Les "
+            "distinguer explicitement permet à une IA de savoir sur laquelle s'appuyer pour répondre à une "
+            "question de hiérarchie sans se tromper."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Diffusion / propagation sur un graphe",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Pour trouver les concepts pertinents à une question, on part de quelques nœuds bien identifiés "
+            "puis on étend la recherche à leurs voisins directs, avec un score qui s'affaiblit à mesure qu'on "
+            "s'éloigne. Une façon d'élargir une recherche sans avoir à comparer la question à chaque nœud du "
+            "graphe un par un."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Couche de liaison (graphe ↔ base vectorielle)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Un fichier ou une table séparée qui associe chaque concept d'un graphe aux extraits de texte qui "
+            "le mentionnent réellement, construite une seule fois à l'avance plutôt qu'à chaque question. Permet "
+            "de faire collaborer un graphe et une base vectorielle sans jamais les fusionner — donc de réutiliser "
+            "la même base vectorielle avec plusieurs graphes différents."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Lemmatisation",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Réduire un mot à sa forme de base en tenant compte de sa grammaire réelle (un pluriel, une "
+            "conjugaison ramenés à leur forme du dictionnaire), contrairement à un simple découpage de suffixe "
+            "qui ignore le sens. Utile pour retrouver un terme même quand il apparaît sous une forme "
+            "légèrement différente dans le texte."
+        ),
+        "ou_le_voir": None,
+    },
+    {
+        "terme": "Architecture découplée (base vectorielle / graphe)",
+        "categorie": "Données & recherche",
+        "definition_simple": (
+            "Concevoir la base de textes vectorisés indépendamment de tout graphe de connaissances précis, pour "
+            "qu'elle puisse servir plusieurs graphes différents à la fois plutôt que d'être figée pour un seul "
+            "usage. Un principe d'architecture qui évite de dupliquer les mêmes textes pour chaque nouveau cas "
+            "d'usage."
+        ),
+        "ou_le_voir": None,
     },
     {
         "terme": "Agent (IA agentique)",
@@ -204,112 +307,81 @@ TERMES = [
     },
  {'terme': 'LLM génératif',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier que le modèle reste cohérent, factuellement correct et suit bien les '
-                      'instructions — sans se fier uniquement à la fluidité apparente de sa réponse.',
+ 'definition_simple': "Un modèle qui génère du texte mot par mot, en prédisant à chaque étape le mot le plus probable compte tenu de tout ce qui a déjà été écrit avant lui — la famille la plus connue (ChatGPT, Llama, Mistral...).",
  'ou_le_voir': 'Catalogue — 7 modèles de cette famille'},
  {'terme': 'Embeddings',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier que la similarité mesurée reflète vraiment le SENS des phrases, et pas '
-                      "seulement les mots qu'elles ont en commun.",
+ 'definition_simple': "Un modèle qui transforme un texte en une liste de nombres (un vecteur) capturant son sens : deux textes proches en sens ont des vecteurs proches. C'est la brique de base de la recherche sémantique et du RAG.",
  'ou_le_voir': 'Catalogue — Nomic Embed Text, Mxbai Embed Large, All-MiniLM'},
  {'terme': 'Classification de texte',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier la précision sur des cas clairs ET la robustesse sur des cas ambigus ou dont '
-                      "la forme diffère de celle des données d'entraînement.",
+ 'definition_simple': "Un modèle qui lit un texte et lui attribue une catégorie parmi un ensemble fixe (par exemple positif/négatif/neutre), sans jamais générer de nouveau texte.",
  'ou_le_voir': 'Catalogue — CamemBERT (sentiment FR)'},
  {'terme': 'Traduction',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier la fidélité du sens, la fluidité, et la gestion du vocabulaire technique '
-                      'métier.',
+ 'definition_simple': "Un modèle spécialisé dans le passage d'une langue à une autre, entraîné spécifiquement sur cette tâche plutôt que sur un usage généraliste.",
  'ou_le_voir': 'Catalogue — Helsinki-NLP OPUS-MT (FR→EN)'},
  {'terme': 'Résumé automatique',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Vérifier la fidélité (pas d'invention), la concision, et la conservation des éléments "
-                      'factuels précis.',
+ 'definition_simple': "Un modèle qui lit un texte long et en produit une version plus courte qui garde l'essentiel — une tâche « texte vers texte », comme la traduction.",
  'ou_le_voir': 'Catalogue — T5 (résumé automatique FR)'},
  {'terme': 'Question-réponse extractive',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier que la réponse est un extrait EXACT et correct du contexte fourni — jamais '
-                      'inventée.',
+ 'definition_simple': "Un modèle qui repère, dans un texte de référence fourni, le passage exact qui répond à une question posée — jamais une réponse inventée ou reformulée.",
  'ou_le_voir': 'Catalogue — CamemBERT Question-Réponse'},
  {'terme': 'Détection de langue',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier la robustesse sur les textes courts et les langues proches.',
+ 'definition_simple': "Un modèle qui identifie la langue d'un texte, généralement minuscule et très rapide — une brique utile avant de router vers le bon modèle spécialisé.",
  'ou_le_voir': 'Catalogue — py3langid — détection de langue'},
  {'terme': "Détection d'objets (vision)",
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Détecter tous les objets pertinents (rappel) sans en inventer (précision), et rester '
-                      'robuste aux conditions réelles (angle, luminosité, occlusion).',
+ 'definition_simple': "Un modèle qui repère où se trouvent des objets dans une image, en les entourant d'un rectangle et en les étiquetant.",
  'ou_le_voir': 'Catalogue — YOLOv8 (détection, nano), YOLOv8 (détection, small)'},
  {'terme': "Classification d'image",
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier si la bonne catégorie ressort en top-1, ou au moins dans le top-5.',
+ 'definition_simple': "Un modèle qui attribue une seule étiquette à une image entière, sans localiser où se trouve quoi que ce soit — à distinguer de la détection d'objets.",
  'ou_le_voir': 'Catalogue — YOLOv8 (classification, nano), YOLOv8 (classification, small)'},
  {'terme': 'Transcription audio',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Vérifier l'exactitude du texte transcrit (taux d'erreur de mots) et la robustesse au "
-                      "bruit et à l'accent.",
+ 'definition_simple': "Un modèle qui transforme un signal audio (une voix enregistrée) en texte écrit.",
  'ou_le_voir': 'Catalogue — Whisper Tiny'},
  {'terme': 'Prévision de séries temporelles',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Vérifier la qualité de la prévision et la fiabilité de l'intervalle de confiance "
-                      'associé.',
+ 'definition_simple': "Un modèle qui apprend le motif d'une courbe de chiffres dans le temps (par exemple un chiffre d'affaires mensuel) pour prédire les valeurs suivantes.",
  'ou_le_voir': 'Catalogue — Chronos Bolt (tiny)'},
  {'terme': 'Classification classique (algorithmes traditionnels)',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Vérifier la précision globale, mais aussi l'explicabilité (quelle variable pèse dans "
-                      'la décision).',
+ 'definition_simple': "Des algorithmes de classification qui ne sont pas des réseaux de neurones (régression logistique, arbre de décision...) — souvent plus simples à entraîner et plus faciles à expliquer qu'un modèle profond.",
  'ou_le_voir': 'Catalogue — Régression logistique — scoring crédit, Arbre de décision — scoring prêt '
                'immobilier'},
  {'terme': 'Recommandation',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier la pertinence des recommandations, leur diversité, et la gestion des '
-                      'nouveaux utilisateurs/produits sans historique.',
+ 'definition_simple': "Un modèle qui apprend les préférences d'un utilisateur à partir de son historique pour lui suggérer ce qu'il n'a pas encore vu ou noté.",
  'ou_le_voir': 'Catalogue — Factorisation de matrice (NMF) — recommandation, Factorisation de matrice (NMF) '
                '— matériaux artisan'},
  {'terme': "Segmentation d'image (vision)",
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Il faut vérifier non seulement que le bon objet est détecté (comme en détection '
-                      'classique), mais que le contour du masque colle précisément aux bords réels de '
-                      "l'objet — car toute imprécision de quelques pixels sur le pourtour fausse directement "
-                      'un calcul de surface (toiture, parcelle, zone à peindre).',
+ 'definition_simple': "Un modèle qui délimite le contour exact de chaque objet dans une image, pixel par pixel — plus précis qu'un simple rectangle de détection, utile pour mesurer une surface réelle.",
  'ou_le_voir': 'Catalogue — YOLOv8 (segmentation)'},
  {'terme': 'Estimation de pose (vision)',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Pour l'estimation de pose, il ne suffit pas de vérifier qu'une personne est détectée "
-                      ': il faut vérifier la précision et la stabilité de la localisation de chaque point '
-                      'clé (épaules, coudes, genoux...), et surtout la robustesse du modèle face aux '
-                      "occlusions et aux chevauchements entre personnes. Le cas d'usage sécurité le plus "
-                      'important - la chute au sol - est souvent le moins bien couvert par les données '
-                      "d'entraînement standard, il mérite donc une attention particulière.",
+ 'definition_simple': "Un modèle qui repère les points clés du corps humain (épaules, coudes, genoux...) dans une image — base de nombreux usages de sécurité au travail ou de sport.",
  'ou_le_voir': 'Catalogue — YOLOv8 (estimation de pose)'},
  {'terme': 'Clustering non supervisé',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Contrairement à la classification, il n'existe aucune étiquette de référence à "
-                      'comparer : on ne peut pas mesurer un taux de bonnes réponses. Il faut donc vérifier '
-                      'la cohérence géométrique des groupes formés (compacité, séparation), leur stabilité '
-                      "quand on relance l'algorithme, et leur sensibilité au choix du nombre K et à "
-                      "l'échelle des variables.",
+ 'definition_simple': "Un modèle qui regroupe des données similaires sans aucune étiquette fournie à l'avance : il découvre lui-même des groupes cohérents, contrairement à la classification.",
  'ou_le_voir': 'Catalogue — KMeans — segmentation de clientèle'},
  {'terme': "Recherche d'image par similarité",
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Vérifier que le score de similarité reflète une vraie ressemblance de contenu ou de '
-                      'style (même objet, même type de bien, même ambiance) et non un artefact superficiel '
-                      'comme une couleur dominante ou un fond similaire par hasard.',
+ 'definition_simple': "Un modèle qui transforme une image en vecteur de nombres (comme les embeddings de texte) pour comparer des images par leur contenu visuel plutôt que pixel par pixel.",
  'ou_le_voir': 'Catalogue — ResNet-18 — similarité visuelle'},
  {'terme': 'Reconnaissance de texte (OCR)',
  'categorie': 'Famille de modèle',
- 'definition_simple': "Vérifier l'exactitude caractère par caractère du texte extrait, pas seulement une "
-                      'impression générale de lisibilité : un OCR utilisé en comptabilité doit être jugé sur '
-                      'sa capacité à restituer exactement les montants, dates et références, où une seule '
-                      'confusion de caractère change le sens du document.',
+ 'definition_simple': "Un modèle qui extrait le texte contenu dans une image (une facture scannée, une photo de document) plutôt que de le retaper à la main.",
  'ou_le_voir': 'Catalogue — Tesseract OCR'},
  {'terme': 'Synthèse vocale (texte vers audio)',
  'categorie': 'Famille de modèle',
- 'definition_simple': 'Pour un moteur à règles phonétiques comme eSpeak NG, il faut vérifier que le texte '
-                      'est correctement transformé en sons prononçables et compréhensibles (nombres, sigles, '
-                      'noms propres, ponctuation), pas juger la qualité audio ou le naturel de la voix comme '
-                      'on le ferait pour un moteur neuronal.',
+ 'definition_simple': "Un modèle qui transforme du texte écrit en voix audible — l'inverse de la transcription audio.",
  'ou_le_voir': 'Catalogue — eSpeak NG — synthèse vocale'},
  {'terme': 'Llama 3.2 (3B)',
  'categorie': 'Modèle du catalogue',

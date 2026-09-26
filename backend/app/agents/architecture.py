@@ -114,7 +114,12 @@ COMPOSANTS = [
         "champs_config": [
             {"cle": "outil", "label": "Outil appelé", "type": "select", "options": ["rechercher", "calculatrice"], "defaut": "rechercher"},
             {
-                "cle": "prompt", "label": "Requête (si outil = rechercher)", "type": "texte",
+                # "requete" (pas "prompt") : c'est le nom de champ que engine.py._handler_outil_mcp
+                # lit réellement pour la branche recherche (config.get("requete")) — avec "prompt"
+                # ici, la saisie de l'utilisateur n'atteignait jamais le handler, qui retombait
+                # silencieusement sur la requête de secours "MCP" (même bug déjà corrigé côté
+                # Parcours guidé, jamais propagé à cette définition du canvas libre).
+                "cle": "requete", "label": "Requête (si outil = rechercher)", "type": "texte",
                 "exemples": [
                     {"label": "Définition MCP", "valeur": "Qu'est-ce que le protocole MCP ?"},
                     {"label": "Principe du RAG", "valeur": "Comment fonctionne le RAG ?"},

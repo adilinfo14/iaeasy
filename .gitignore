@@ -8,3 +8,5 @@ static/
 *.egg-info/
 .DS_Store
 .env
+secrets/
+.claude/settings.local.json

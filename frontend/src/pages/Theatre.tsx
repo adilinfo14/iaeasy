@@ -101,28 +101,41 @@ export default function Theatre() {
   const ligneCourante = episode?.scenes?.[sceneIndex]?.repliques?.[ligneIndex]
   const decorCourant = episode?.scenes?.[sceneIndex]?.decor
 
-  // Effet machine à écrire + narration vocale (voix neuronale Piper, générée côté serveur) :
-  // l'avance automatique n'a lieu qu'une fois le texte ET la voix RÉELLEMENT terminés (voir plus
-  // bas) — un délai fixe devinait mal la durée de la voix et la coupait souvent trop tôt.
+  // Effet machine à écrire + narration vocale (voix neuronale Piper, générée côté serveur).
+  // Corrige un décalage signalé en conditions réelles ("le son ne correspond pas à ce qui est
+  // écrit") : la frappe démarrait immédiatement à une vitesse fixe pendant que l'audio ne se
+  // mettait à jouer qu'une fois récupéré (délai réseau variable) — les deux couraient à des
+  // rythmes indépendants. Désormais la frappe démarre AVEC la lecture audio (dès que sa durée
+  // réelle est connue) et sa vitesse est recalculée pour épouser cette durée.
   useEffect(() => {
     if (!ligneCourante) return
     setTexteAffiche('')
-    let i = 0
     const texte = ligneCourante.texte
-    const id = setInterval(() => {
-      i += 1
-      setTexteAffiche(texte.slice(0, i))
-      if (i >= texte.length) clearInterval(id)
-    }, VITESSE_FRAPPE_MS)
-
     arreterAudio()
+
+    let idFrappe: ReturnType<typeof setInterval> | null = null
+    let annule = false
+
+    const demarrerFrappe = (dureeMs: number) => {
+      const intervalle = Math.max(12, Math.min(60, dureeMs / Math.max(texte.length, 1)))
+      let i = 0
+      idFrappe = setInterval(() => {
+        i += 1
+        setTexteAffiche(texte.slice(0, i))
+        if (i >= texte.length && idFrappe) clearInterval(idFrappe)
+      }, intervalle)
+    }
+
     if (!sonActif) {
       setAudioTermine(true)
-      return () => clearInterval(id)
+      demarrerFrappe(texte.length * VITESSE_FRAPPE_MS)
+      return () => {
+        annule = true
+        if (idFrappe) clearInterval(idFrappe)
+      }
     }
 
     setAudioTermine(false)
-    let annule = false
     genererVoixTheatre(texte, ligneCourante.personnage)
       .then((url) => {
         if (annule) return
@@ -130,14 +143,38 @@ export default function Theatre() {
         const audio = new Audio(url)
         audioRef.current = audio
         audio.onended = () => setAudioTermine(true)
-        audio.onerror = () => setAudioTermine(true)
-        audio.play().catch(() => setAudioTermine(true))
+        audio.onerror = () => {
+          setAudioTermine(true)
+          if (!idFrappe) demarrerFrappe(texte.length * VITESSE_FRAPPE_MS)
+        }
+        audio.onloadedmetadata = () => {
+          if (annule) return
+          const dureeMs = isFinite(audio.duration) && audio.duration > 0 ? audio.duration * 1000 : texte.length * VITESSE_FRAPPE_MS
+          // La frappe ne démarre qu'une fois que play() confirme que la lecture a RÉELLEMENT
+          // commencé (promesse résolue), pas dès que les métadonnées sont chargées — entre les
+          // deux, le pipeline audio du navigateur peut mettre quelques dizaines à centaines de ms
+          // à démarrer, un décalage qui restait perceptible (signalé en conditions réelles).
+          audio
+            .play()
+            .then(() => {
+              if (annule) return
+              demarrerFrappe(dureeMs)
+            })
+            .catch(() => {
+              setAudioTermine(true)
+              if (!annule) demarrerFrappe(dureeMs)
+            })
+        }
       })
-      .catch(() => setAudioTermine(true))
+      .catch(() => {
+        if (annule) return
+        setAudioTermine(true)
+        demarrerFrappe(texte.length * VITESSE_FRAPPE_MS)
+      })
 
     return () => {
       annule = true
-      clearInterval(id)
+      if (idFrappe) clearInterval(idFrappe)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, sceneIndex, ligneIndex, sonActif])
@@ -247,19 +284,6 @@ export default function Theatre() {
             />
           </div>
 
-          {!termine && ligneCourante && (
-            <div className="theatre-dialogue">
-              <div className="theatre-dialogue-nom">{NOMS[ligneCourante.personnage as 'clio' | 'marco']}</div>
-              <p className="theatre-dialogue-texte">{texteAffiche}</p>
-            </div>
-          )}
-
-          {termine && (
-            <div className="theatre-dialogue theatre-fin">
-              <p>— Fin de l'histoire —</p>
-            </div>
-          )}
-
           <div className="theatre-controles">
             <button onClick={reculer} disabled={sceneIndex === 0 && ligneIndex === 0}>
               ◀ Précédent
@@ -286,6 +310,21 @@ export default function Theatre() {
               Choisir une autre histoire
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Texte hors du cadre visuel — plus lisible, et ne recouvre plus le décor/les personnages
+          (demandé après retour utilisateur : "mets le texte à l'extérieur de l'écran"). */}
+      {episode && !termine && ligneCourante && (
+        <div className="theatre-dialogue">
+          <div className="theatre-dialogue-nom">{NOMS[ligneCourante.personnage as 'clio' | 'marco']}</div>
+          <p className="theatre-dialogue-texte">{texteAffiche}</p>
+        </div>
+      )}
+
+      {episode && termine && (
+        <div className="theatre-dialogue theatre-fin">
+          <p>— Fin de l'histoire —</p>
         </div>
       )}
     </div>

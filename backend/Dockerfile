@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-fra \
     espeak-ng \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .

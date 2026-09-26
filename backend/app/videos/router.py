@@ -155,6 +155,191 @@ VIDEOS = [
             },
         ],
     },
+    {
+        "id": "octo-rag-entreprise",
+        "titre": "Maîtriser le RAG : connecter les modèles d'IA Gen aux données de l'entreprise",
+        "youtube_id": "9tmlseutQM8",
+        "description": (
+            "Le RAG expliqué du point de vue de l'entreprise qui doit le déployer : où va "
+            "réellement l'argent, comment savoir s'il fonctionne, et jusqu'où pousser la "
+            "sobriété — bien au-delà de la seule mécanique retrieval + génération déjà vue "
+            "dans la brique RAG de ce site."
+        ),
+        "source": (
+            "Le schéma décrit ci-dessous provient d'une présentation d'OCTO Technology (part of "
+            "Accenture), série « Le Comptoir OCTO », © 2025, tous droits réservés. Les visuels "
+            "originaux ne sont pas reproduits ici : l'explication qui suit est une description en "
+            "nos propres mots des concepts qu'ils illustrent, à but pédagogique."
+        ),
+        "schemas": [
+            {
+                "titre": "Le coût réel d'un RAG : où va l'argent",
+                "schema": [
+                    {"icone": "❓", "label": "Question"},
+                    {"icone": "🔎", "label": "Recherche vectorielle (coût marginal)"},
+                    {"icone": "📄", "label": "Passages retrouvés"},
+                    {"icone": "🧠", "label": "Appel LLM (~99% du coût total)"},
+                    {"icone": "✅", "label": "Réponse"},
+                ],
+                "explication": (
+                    "Un constat chiffré qui surprend souvent : dans un pipeline RAG (le même "
+                    "principe que la brique RAG de ce site — retrouver un passage pertinent puis "
+                    "laisser un LLM répondre en s'appuyant dessus), la recherche vectorielle "
+                    "elle-même coûte presque rien à faire tourner. C'est l'appel au LLM pour "
+                    "générer la réponse finale qui concentre environ 99% du coût réel du système. "
+                    "Concrètement, cela veut dire que pour réduire la facture d'un RAG en "
+                    "production, optimiser l'indexation ou la recherche a peu d'effet — c'est sur "
+                    "le choix du modèle générateur (sa taille, son fournisseur) que se joue "
+                    "l'essentiel des économies. La vidéo évoque aussi deux prolongements utiles : "
+                    "des cadres d'évaluation dédiés au RAG (RAGAS, TruLens) pour mesurer "
+                    "objectivement la qualité des réponses plutôt qu'à l'œil, et un outil de mesure "
+                    "d'impact environnemental (CodeCarbon) — la sobriété numérique n'étant pas "
+                    "qu'une question de coût, mais aussi d'empreinte carbone. Elle pointe enfin vers "
+                    "une tendance à surveiller : remplacer un LLM généraliste massif par un petit "
+                    "modèle de langage (SLM) exécuté localement, pour les cas où la tâche ne "
+                    "justifie pas la puissance — et donc le coût — d'un très gros modèle."
+                ),
+            },
+        ],
+    },
+    {
+        "id": "octo-agents-ia",
+        "titre": "Agents IA : Tout ce qu'il faut savoir",
+        "youtube_id": "z2j5RfWNrNk",
+        "description": (
+            "Une distinction essentielle et souvent confondue : un « workflow agentique » (des "
+            "étapes connues à l'avance, orchestrées) n'est pas la même chose qu'un « agent IA » "
+            "autonome — avec des critères concrets pour savoir lequel choisir."
+        ),
+        "source": (
+            "Le schéma décrit ci-dessous provient d'une présentation d'OCTO Technology (part of "
+            "Accenture), série « Le Comptoir OCTO », © 2025, tous droits réservés. Les visuels "
+            "originaux ne sont pas reproduits ici : l'explication qui suit est une description en "
+            "nos propres mots des concepts qu'ils illustrent, à but pédagogique."
+        ),
+        "schemas": [
+            {
+                "titre": "Workflow orchestré ou agent autonome : la question à se poser",
+                "schema": [
+                    {"icone": "❓", "label": "Les étapes sont-elles connues à l'avance ?"},
+                    {"icone": "✅", "label": "Oui → workflow (chaînage, routage, parallélisation)"},
+                    {"icone": "❌", "label": "Non → agent autonome (mémoire + outils + décision)"},
+                ],
+                "explication": (
+                    "La vidéo distingue deux familles qu'on confond souvent sous le même mot "
+                    "« agent ». Un « agentic workflow » enchaîne des étapes prédéfinies par un "
+                    "humain — prompt chaining (une sortie nourrit le prompt suivant), routage "
+                    "(aiguiller vers le bon traitement selon la demande), exécution en parallèle, "
+                    "ou un couple évaluateur-optimiseur qui boucle jusqu'à un résultat satisfaisant. "
+                    "Rien de tout cela ne décide vraiment par lui-même : le chemin est fixé à "
+                    "l'avance, seul le contenu varie. Un « agent IA » au sens strict, lui, décide "
+                    "SEUL de la suite à chaque étape — c'est très exactement la boucle ReAct de la "
+                    "brique « Agent unique » de ce site : le modèle choisit d'utiliser un outil, "
+                    "observe le résultat, puis décide de la suite, sans qu'on lui impose le chemin. "
+                    "La vidéo introduit aussi le protocole MCP (Model Context Protocol, déjà "
+                    "rencontré dans la brique « Outil / MCP » de ce site) comme le standard qui "
+                    "permet à un agent d'appeler des outils de façon uniforme, plutôt que de coder "
+                    "une intégration différente pour chaque service. Le message pratique à retenir "
+                    ": un vrai agent autonome coûte plus cher et est moins prévisible qu'un workflow "
+                    "— à réserver aux cas où le chemin ne PEUT pas être connu à l'avance, pas à "
+                    "utiliser par défaut dès qu'une tâche implique plusieurs étapes."
+                ),
+            },
+        ],
+    },
+    {
+        "id": "octo-evaluer-rag",
+        "titre": "Évaluer un projet de RAG",
+        "youtube_id": "BQhkeGqA3XI",
+        "description": (
+            "Comment savoir si un RAG « marche » vraiment, avec des chiffres plutôt qu'une "
+            "impression — jeux de test, métriques classiques vs un LLM qui juge un autre LLM, "
+            "et une méthode inspirée du développement piloté par les tests."
+        ),
+        "source": (
+            "Le schéma décrit ci-dessous provient d'une présentation d'OCTO Technology (part of "
+            "Accenture), série « Le Comptoir OCTO », © 2025, tous droits réservés. Les visuels "
+            "originaux ne sont pas reproduits ici : l'explication qui suit est une description en "
+            "nos propres mots des concepts qu'ils illustrent, à but pédagogique."
+        ),
+        "schemas": [
+            {
+                "titre": "LLM as Judge : faire noter une réponse par un second modèle",
+                "schema": [
+                    {"icone": "❓", "label": "Question + contexte de référence"},
+                    {"icone": "🧠", "label": "LLM à évaluer → réponse"},
+                    {"icone": "⚖️", "label": "LLM juge (critères précis donnés à l'avance)"},
+                    {"icone": "📊", "label": "Score (~85% d'accord avec un humain)"},
+                ],
+                "explication": (
+                    "Avant même de parler de méthode, la vidéo pose une contrainte statistique "
+                    "concrète : il faut environ 100 questions-contextes-réponses dans un jeu de "
+                    "test pour pouvoir affirmer, de façon fiable, qu'un système RAG est meilleur "
+                    "qu'un autre avec plus de 10% d'écart — en dessous, la différence observée peut "
+                    "n'être que du bruit. Pour noter chaque réponse, deux familles de méthodes "
+                    "s'opposent. Les métriques classiques (ROUGE, BLEU, BERTScore) comparent le "
+                    "texte généré à une réponse de référence, mot à mot ou par similarité — rapides "
+                    "mais rigides, elles pénalisent une reformulation pourtant correcte. Le « LLM as "
+                    "Judge » confie plutôt la notation à un second LLM, à qui l'on donne des "
+                    "critères explicites (exactitude, complétude, absence d'invention) : la vidéo "
+                    "cite un taux d'accord d'environ 85% avec un jugement humain majoritaire — pas "
+                    "parfait, mais nettement plus proche du jugement humain que les métriques "
+                    "classiques, pour un coût très inférieur à une évaluation humaine systématique. "
+                    "La démarche générale proposée, l'« Evaluation Driven Development » (EDD), "
+                    "reprend l'esprit du TDD (écrire le test avant le code) appliqué à l'IA : "
+                    "exploration (définir ce qu'on va mesurer avant de construire), mise en "
+                    "production (évaluer avant de déployer), puis maintenance (réévaluer en continu "
+                    "pour détecter une dérive) — exactement l'esprit du module « Stratégie de "
+                    "tests » de ce site, avec cette fois des chiffres et des seuils concrets."
+                ),
+            },
+        ],
+    },
+    {
+        "id": "octo-modernisation-ia",
+        "titre": "Comment l'IA générative peut-elle moderniser efficacement vos SI Brownfield ?",
+        "youtube_id": "90EeaP-HX-g",
+        "description": (
+            "Un cas d'usage très concret et loin des chatbots : utiliser l'IA générative pour "
+            "comprendre et migrer du code legacy dont la logique métier a été perdue — avec un "
+            "message clair sur le rôle qui reste humain."
+        ),
+        "source": (
+            "Le schéma décrit ci-dessous provient d'une présentation d'OCTO Technology (part of "
+            "Accenture), série « Le Comptoir OCTO », © 2025, tous droits réservés. Les visuels "
+            "originaux ne sont pas reproduits ici : l'explication qui suit est une description en "
+            "nos propres mots des concepts qu'ils illustrent, à but pédagogique."
+        ),
+        "schemas": [
+            {
+                "titre": "Moderniser du code legacy avec l'IA : le pilotage reste humain",
+                "schema": [
+                    {"icone": "📜", "label": "Code legacy, logique métier perdue"},
+                    {"icone": "🤖", "label": "IA (reverse-engineering assisté)"},
+                    {"icone": "👤", "label": "Ingénieur senior (pilote et valide)"},
+                    {"icone": "🏗️", "label": "Code modernisé"},
+                ],
+                "explication": (
+                    "Un « système d'information brownfield » désigne un système existant, ancien, "
+                    "qu'il faut faire évoluer plutôt que reconstruire à neuf — par opposition à un "
+                    "projet « greenfield » parti de zéro. La vidéo montre comment l'IA générative "
+                    "aide sur deux difficultés très concrètes de ce contexte : retrouver une "
+                    "logique métier enfouie dans du vieux code sans documentation à jour (le modèle "
+                    "aide à reformuler en langage clair ce qu'un bout de code obscur fait "
+                    "réellement), et accélérer la migration de grosses applications Java grâce à des "
+                    "IDE augmentés par l'IA qui proposent des transformations de code assistées. Le "
+                    "message central de la présentation, à retenir au-delà du cas Java : « piloter "
+                    "l'IA est un vrai travail d'ingénierie », qui suppose de la séniorité technique "
+                    "pour juger si une suggestion de l'IA est correcte avant de l'accepter — l'IA "
+                    "accélère et explore, mais ne remplace pas le jugement de quelqu'un qui "
+                    "comprend déjà le système. C'est le même principe que la relecture humaine déjà "
+                    "présente ailleurs sur ce site (le « Human in the loop » de la première vidéo "
+                    "de cette page) appliqué cette fois à un contexte de développement logiciel "
+                    "plutôt qu'à un agent conversationnel."
+                ),
+            },
+        ],
+    },
 ]
 
 

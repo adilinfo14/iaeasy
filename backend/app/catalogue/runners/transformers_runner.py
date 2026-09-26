@@ -7,7 +7,11 @@ _langid_model = None
 _ner_pipeline_cache: dict = {}
 _qa_pipeline_cache: dict = {}
 _whisper_pipeline_cache: dict = {}
+_audio_clf_pipeline_cache: dict = {}
 _sample_audio_cache = None
+
+LABELS_ZERO_SHOT_EN = ["technology", "sports", "politics", "health", "culture", "economy"]
+LABELS_ZERO_SHOT_FR = ["technologie", "sport", "politique", "santé", "culture", "économie"]
 
 
 def _get_pipeline(task: str, model_ref: str):
@@ -64,13 +68,33 @@ def _resume_sync(model_ref: str, input_text: str) -> dict:
     return {"type": "resume", "texte_original": input_text, "sortie": texte}
 
 
+def _fusionner_entites_adjacentes(entites: list, texte: str) -> list:
+    # aggregation_strategy="simple" ne fusionne que les tokens tagués I- à la suite d'un B- ;
+    # certains modèles (constaté avec DrBERT-CASM2) prédisent B- sur CHAQUE sous-mot d'une même
+    # entité ("bis" + "##oprolol" restent deux entités séparées au lieu de "bisoprolol") — on
+    # fusionne donc nous-mêmes les entités contiguës de même catégorie, en relisant le texte
+    # d'origine plutôt qu'en recollant les fragments "word" (qui portent des préfixes "##").
+    if not entites:
+        return entites
+    fusionnees = [dict(entites[0])]
+    for e in entites[1:]:
+        precedente = fusionnees[-1]
+        if e["entity_group"] == precedente["entity_group"] and e["start"] <= precedente["end"]:
+            precedente["end"] = max(precedente["end"], e["end"])
+            precedente["word"] = texte[precedente["start"] : precedente["end"]]
+            precedente["score"] = min(precedente["score"], e["score"])
+        else:
+            fusionnees.append(dict(e))
+    return fusionnees
+
+
 def _ner_sync(model_ref: str, input_text: str) -> dict:
     if model_ref not in _ner_pipeline_cache:
         from transformers import pipeline
 
         _ner_pipeline_cache[model_ref] = pipeline("ner", model=model_ref, aggregation_strategy="simple")
 
-    entites = _ner_pipeline_cache[model_ref](input_text)
+    entites = _fusionner_entites_adjacentes(_ner_pipeline_cache[model_ref](input_text), input_text)
     return {
         "type": "extraction_entites",
         "texte_analyse": input_text,
@@ -122,6 +146,96 @@ def _qa_sync(model_ref: str, input_text: str) -> dict:
         "question": question,
         "reponse": reponse or "(aucune réponse trouvée dans le contexte)",
         "confiance": round(confiance, 4),
+    }
+
+
+def _classification_multi_labels_sync(model_ref: str, input_text: str) -> dict:
+    # top_k=None (au lieu du top-1 par défaut de _sentiment_sync) : les modèles de modération
+    # sont souvent multi-étiquettes (ex. toxique/menace/insulte à la fois) — masquer les scores
+    # secondaires donnerait une fausse impression de verdict unique et tranché.
+    clf = _get_pipeline("text-classification", model_ref)
+    resultats = clf(input_text, top_k=None)
+    return {
+        "type": "classification_multi_labels",
+        "texte_analyse": input_text,
+        "predictions": [
+            {"etiquette": r["label"], "confiance": round(float(r["score"]), 4)}
+            for r in sorted(resultats, key=lambda r: -r["score"])
+        ],
+    }
+
+
+def _zero_shot_sync(model_ref: str, input_text: str, labels: list[str]) -> dict:
+    clf = _get_pipeline("zero-shot-classification", model_ref)
+    resultat = clf(input_text, labels)
+    return {
+        "type": "classification_zero_shot",
+        "texte_analyse": input_text,
+        "predictions": [
+            {"etiquette": label, "confiance": round(float(score), 4)}
+            for label, score in zip(resultat["labels"], resultat["scores"])
+        ],
+    }
+
+
+def _generation_questions_sync(model_ref: str, input_text: str) -> dict:
+    key = ("qg", model_ref)
+    if key not in _pipeline_cache:
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained(model_ref)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_ref)
+        _pipeline_cache[key] = (tokenizer, model)
+
+    tokenizer, model = _pipeline_cache[key]
+    entrees = tokenizer(f"generate question: {input_text}", return_tensors="pt", truncation=True, max_length=512)
+    sortie = model.generate(**entrees, max_new_tokens=64, num_beams=4)
+    question = tokenizer.decode(sortie[0], skip_special_tokens=True)
+    return {"type": "question_generee", "texte_source": input_text, "question_generee": question}
+
+
+def _correction_grammaticale_sync(model_ref: str, input_text: str, prefixe: str) -> dict:
+    key = ("gec", model_ref)
+    if key not in _pipeline_cache:
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained(model_ref)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_ref)
+        _pipeline_cache[key] = (tokenizer, model)
+
+    tokenizer, model = _pipeline_cache[key]
+    entrees = tokenizer(f"{prefixe}{input_text}", return_tensors="pt", truncation=True, max_length=512)
+    sortie = model.generate(**entrees, max_new_tokens=128, num_beams=4)
+    corrige = tokenizer.decode(sortie[0], skip_special_tokens=True)
+    return {"type": "correction_grammaticale", "texte_original": input_text, "texte_corrige": corrige}
+
+
+def _classification_audio_sync(model_ref: str) -> dict:
+    if model_ref not in _audio_clf_pipeline_cache:
+        from transformers import pipeline
+
+        _audio_clf_pipeline_cache[model_ref] = pipeline("audio-classification", model=model_ref)
+
+    echantillon = _get_sample_audio()
+    # top_k=5 : sans cette limite, un modèle entraîné sur AudioSet (527 catégories) renvoie les
+    # 527 scores d'un coup, illisible et inutile à afficher au-delà des toutes premières.
+    resultats = _audio_clf_pipeline_cache[model_ref](echantillon["array"].copy(), top_k=5)
+
+    import numpy as np
+    import soundfile as sf
+
+    audio_int16 = (np.clip(echantillon["array"], -1.0, 1.0) * 32767).astype(np.int16)
+    tampon = io.BytesIO()
+    sf.write(tampon, audio_int16, echantillon["sampling_rate"], format="WAV", subtype="PCM_16")
+    audio_b64 = base64.b64encode(tampon.getvalue()).decode()
+
+    return {
+        "type": "classification_audio",
+        "audio_base64": audio_b64,
+        "predictions": [{"etiquette": r["label"], "confiance": round(float(r["score"]), 4)} for r in resultats],
+        "note": "Échantillon audio de démonstration (voix humaine parlée, jeu de test standard) — "
+        "utile pour observer les catégories reconnues, même si ce n'est pas un exemple typique "
+        "(alarme, klaxon, aboiement...) pour ce modèle entraîné sur des sons ambiants.",
     }
 
 
@@ -220,3 +334,23 @@ async def run_qa(model_ref: str, input_text: str) -> dict:
 
 async def run_transcription(model_ref: str) -> dict:
     return await asyncio.to_thread(_transcription_sync, model_ref)
+
+
+async def run_classification_multi_labels(model_ref: str, input_text: str) -> dict:
+    return await asyncio.to_thread(_classification_multi_labels_sync, model_ref, input_text)
+
+
+async def run_zero_shot(model_ref: str, input_text: str, labels: list[str]) -> dict:
+    return await asyncio.to_thread(_zero_shot_sync, model_ref, input_text, labels)
+
+
+async def run_generation_questions(model_ref: str, input_text: str) -> dict:
+    return await asyncio.to_thread(_generation_questions_sync, model_ref, input_text)
+
+
+async def run_correction_grammaticale(model_ref: str, input_text: str, prefixe: str = "") -> dict:
+    return await asyncio.to_thread(_correction_grammaticale_sync, model_ref, input_text, prefixe)
+
+
+async def run_classification_audio(model_ref: str) -> dict:
+    return await asyncio.to_thread(_classification_audio_sync, model_ref)

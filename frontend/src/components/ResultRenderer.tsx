@@ -247,6 +247,42 @@ export default function ResultRenderer({ resultat }: Props) {
         </div>
       )
 
+    case 'scoring_assurance_auto':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">
+            Entraîné en direct sur {resultat.nb_profils_entrainement} profils jouets ({resultat.nb_profils_a_risque} à risque).
+          </p>
+          <p className="texte-muted">Profil testé :</p>
+          <ul className="liste-simple">
+            <li>Âge du conducteur : {resultat.profil_teste.age_conducteur} ans</li>
+            <li>Ancienneté du permis : {resultat.profil_teste.anciennete_permis_annees} ans</li>
+            <li>Sinistres responsables (3 ans) : {resultat.profil_teste.nb_sinistres_3ans}</li>
+          </ul>
+          <Meter valeur={resultat.probabilite_risque} etiquette="Probabilité de risque" />
+          <div className="badge-etiquette">{resultat.decision_suggeree}</div>
+          <p className="texte-muted">{resultat.explication}</p>
+        </div>
+      )
+
+    case 'scoring_assurance_sante':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">
+            Entraîné en direct sur {resultat.nb_profils_entrainement} profils jouets ({resultat.nb_profils_a_risque} à risque).
+          </p>
+          <p className="texte-muted">Profil testé :</p>
+          <ul className="liste-simple">
+            <li>Âge : {resultat.profil_teste.age} ans</li>
+            <li>Consultations dans l'année : {resultat.profil_teste.nb_consultations_an}</li>
+            <li>Hospitalisation récente : {resultat.profil_teste.hospitalisation_recente ? 'Oui' : 'Non'}</li>
+          </ul>
+          <Meter valeur={resultat.probabilite_risque} etiquette="Probabilité de sur-risque" />
+          <div className="badge-etiquette">{resultat.decision_suggeree}</div>
+          <p className="texte-muted">{resultat.explication}</p>
+        </div>
+      )
+
     case 'scoring_pret_immobilier':
       return (
         <div className="resultat-carte">
@@ -367,6 +403,84 @@ export default function ResultRenderer({ resultat }: Props) {
           />
           <p className="texte-muted">Texte extrait :</p>
           <pre className="traduction-cible">{resultat.texte_extrait}</pre>
+          <p className="texte-muted note">{resultat.note}</p>
+        </div>
+      )
+
+    case 'classification_multi_labels':
+      return (
+        <div className="resultat-carte">
+          {resultat.predictions.map((p: any, i: number) => (
+            <Meter key={i} valeur={p.confiance} etiquette={p.etiquette} />
+          ))}
+        </div>
+      )
+
+    case 'classification_zero_shot':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">Catégories candidates classées par pertinence :</p>
+          {resultat.predictions.map((p: any, i: number) => (
+            <Meter key={i} valeur={p.confiance} etiquette={p.etiquette} />
+          ))}
+        </div>
+      )
+
+    case 'question_generee':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">Texte source :</p>
+          <p className="texte-original">{resultat.texte_source}</p>
+          <p className="texte-muted">Question générée :</p>
+          <div className="badge-etiquette">{resultat.question_generee}</div>
+        </div>
+      )
+
+    case 'correction_grammaticale':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">Texte original :</p>
+          <p className="texte-original">{resultat.texte_original}</p>
+          <p className="texte-muted">Texte corrigé :</p>
+          <p className="traduction-cible">{resultat.texte_corrige}</p>
+        </div>
+      )
+
+    case 'legende_image':
+      return (
+        <div className="resultat-carte">
+          <img
+            src={`data:image/jpeg;base64,${resultat.image_base64}`}
+            alt="Image à légender"
+            style={{ maxWidth: '100%', borderRadius: 8 }}
+          />
+          <p className="texte-muted">Légende générée :</p>
+          <div className="badge-etiquette">{resultat.legende}</div>
+          <p className="texte-muted note">{resultat.note}</p>
+        </div>
+      )
+
+    case 'classification_audio':
+      return (
+        <div className="resultat-carte">
+          <audio controls src={`data:audio/wav;base64,${resultat.audio_base64}`} style={{ width: '100%' }} />
+          {resultat.predictions.map((p: any, i: number) => (
+            <Meter key={i} valeur={p.confiance} etiquette={p.etiquette} />
+          ))}
+          <p className="texte-muted note">{resultat.note}</p>
+        </div>
+      )
+
+    case 'image_generee':
+      return (
+        <div className="resultat-carte">
+          <p className="texte-muted">Prompt :</p>
+          <p className="texte-original">{resultat.prompt}</p>
+          <img
+            src={`data:image/png;base64,${resultat.image_base64}`}
+            alt={resultat.prompt}
+            style={{ maxWidth: '100%', borderRadius: 8 }}
+          />
           <p className="texte-muted note">{resultat.note}</p>
         </div>
       )

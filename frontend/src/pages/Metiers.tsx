@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { listerMetiers } from '../api/client'
 
 export default function Metiers() {
+  const [searchParams] = useSearchParams()
   const [metiers, setMetiers] = useState<any[]>([])
   const [ouvert, setOuvert] = useState<string | null>(null)
-  const [secteurActif, setSecteurActif] = useState('tous')
+  // Pré-rempli depuis ?secteur=... (lien direct depuis les cartes secteur de l'Accueil) — sans
+  // quoi un clic sur "Santé" depuis l'Accueil renvoyait à la vue "Tous les secteurs" non filtrée.
+  const [secteurActif, setSecteurActif] = useState(searchParams.get('secteur') ?? 'tous')
 
   useEffect(() => {
     listerMetiers().then(setMetiers)

@@ -453,8 +453,8 @@
     - label: Portugais
       input: Bom dia, gostaria de saber quando meu pedido será entregue.
     idees_usage:
-    - Trier automatiquement les avis clients laissés sur une marketplace avant de les envoyer au bon service
-      de modération.
+    - Trier automatiquement les avis clients d'une marketplace par langue, avant de les envoyer à
+      l'équipe de modération qui la maîtrise.
     - Orienter un formulaire de contact vers l'équipe support parlant la langue du visiteur.
     - Filtrer les commentaires d'un forum multilingue pour n'afficher que ceux dans la langue préférée
       de l'utilisateur.
@@ -505,9 +505,19 @@
 
     '
   cas_usage:
-    enonce: Classer l'image d'exemple parmi 1000 catégories génériques (modèle non spécialisé agriculture,
-      à titre pédagogique).
-    exemples: []
+    enonce: Classer une image parmi 1000 catégories génériques (modèle non spécialisé agriculture,
+      à titre pédagogique) — choisis un échantillon ci-dessous pour voir le résultat varier réellement.
+    exemples:
+    - label: "Balle de golf"
+      input: golf_ball
+    - label: "Tronçonneuse"
+      input: chain_saw
+    - label: "Église"
+      input: church
+    - label: "Camion-poubelle"
+      input: garbage_truck
+    - label: "Chien (springer)"
+      input: english_springer
     idees_usage:
     - 'Tri des déchets : classer la photo d''un objet jeté comme recyclable ou non.'
     - 'Contrôle qualité industriel : trier d''un coup d''œil une pièce comme conforme ou défectueuse.'
@@ -924,8 +934,19 @@
 
     '
   cas_usage:
-    enonce: Comparer le top-1/top-5 avec la version nano sur la même image d'exemple.
-    exemples: []
+    enonce: Comparer le top-1/top-5 avec la version nano sur le même échantillon (choisis-en un
+      ci-dessous, puis compare avec la fiche "nano").
+    exemples:
+    - label: "Balle de golf"
+      input: golf_ball
+    - label: "Tronçonneuse"
+      input: chain_saw
+    - label: "Église"
+      input: church
+    - label: "Camion-poubelle"
+      input: garbage_truck
+    - label: "Chien (springer)"
+      input: english_springer
     idees_usage:
     - 'Contrôle qualité : différencier des variantes très proches d''une même pièce industrielle.'
     - 'Agriculture : distinguer plus finement les stades de maturité d''un fruit sur une photo.'
@@ -1135,8 +1156,19 @@
 
     '
   cas_usage:
-    enonce: Extraire le texte d'une image de facture générée automatiquement pour l'exemple.
-    exemples: []
+    enonce: Extraire le texte d'un document généré automatiquement pour l'exemple — choisis un type
+      de document ci-dessous pour voir le mécanisme s'appliquer à des mises en page différentes.
+    exemples:
+    - label: "Facture"
+      input: facture
+    - label: "Devis"
+      input: devis
+    - label: "Bon de livraison"
+      input: bon_livraison
+    - label: "Reçu de paiement"
+      input: recu
+    - label: "Note de frais"
+      input: note_frais
     idees_usage:
     - Reverser automatiquement une pile de tickets de caisse papier dans un tableur de notes de frais
     - Extraire les références et quantités d'un bon de livraison photographié depuis un entrepôt
@@ -1183,3 +1215,1146 @@
   lien_telechargement: https://github.com/espeak-ng/espeak-ng
   mode_emploi: Installez le paquet système (`sudo apt install espeak-ng`), puis appelez-le en ligne de
     commande (`espeak-ng -v fr "texte"`) ou via `subprocess` en Python.
+- id: toxic-bert-moderation
+  nom: Toxic-BERT (modération EN, multi-étiquettes)
+  famille: moderation_toxicite
+  secteur: Réseaux sociaux / communauté en ligne
+  moteur: transformers
+  moteur_ref: unitary/toxic-bert
+  taille: 109 millions de paramètres
+  description_pedagogique: >-
+    Contrairement à un modèle de sentiment qui rend une seule étiquette, celui-ci évalue six
+    catégories en parallèle (toxicité générale, menace, insulte, obscénité, haine identitaire,
+    toxicité sévère) — un même message peut cumuler plusieurs scores élevés à la fois. Entraîné
+    sur le jeu de données Jigsaw (Google/Conversation AI), référence du domaine en anglais.
+  cas_usage:
+    enonce: "Évaluer le niveau de toxicité d'un message sur plusieurs catégories à la fois."
+    exemples:
+    - label: "Message neutre"
+      input: "Thanks for the update, looking forward to the next release."
+    - label: "Insulte directe"
+      input: "You are completely useless, stop wasting everyone's time."
+    - label: "Menace"
+      input: "Say that again and you will regret it."
+    - label: "Désaccord poli"
+      input: "I disagree with this approach, I think we should reconsider the plan."
+    - label: "Commentaire sarcastique limite"
+      input: "Oh great, another brilliant idea from our genius team."
+    idees_usage:
+    - "Filtrer automatiquement les commentaires les plus toxiques avant modération humaine sur un forum communautaire."
+    - "Prioriser la file de modération d'un réseau social en remontant d'abord les messages à haut risque."
+    - "Détecter les dérapages dans un chat de jeu vidéo en direct pour déclencher un avertissement automatique."
+    - "Mesurer l'évolution du climat d'une communauté en ligne mois après mois, catégorie par catégorie."
+    - "Alerter un community manager quand un fil de discussion dérive vers la menace plutôt que la simple critique."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/unitary/toxic-bert
+  mode_emploi: "pip install transformers torch, puis pipeline(\"text-classification\", model=\"unitary/toxic-bert\", top_k=None) pour obtenir les 6 scores en une fois."
+- id: roberta-toxicite
+  nom: RoBERTa (toxicité EN, binaire)
+  famille: moderation_toxicite
+  secteur: Service client / support
+  moteur: transformers
+  moteur_ref: s-nlp/roberta_toxicity_classifier
+  taille: 125 millions de paramètres
+  description_pedagogique: >-
+    Un classifieur binaire (toxique / non toxique) plutôt que multi-étiquettes — plus simple à
+    lire qu'un modèle à 6 catégories, au prix d'un diagnostic moins détaillé. Un bon point de
+    comparaison pédagogique avec Toxic-BERT : deux architectures différentes pour une même
+    famille de problème, avec des choix de conception différents.
+  cas_usage:
+    enonce: "Détecter si un message est toxique ou non (classification binaire)."
+    exemples:
+    - label: "Retour client agressif"
+      input: "Your service is a disgrace, I want a refund right now, this is pathetic."
+    - label: "Retour client mécontent mais poli"
+      input: "I am disappointed with the delay, could you please provide an update?"
+    - label: "Message neutre"
+      input: "The package arrived on time, everything looks fine."
+    - label: "Insulte envers un collègue"
+      input: "He is an idiot and should not be allowed to manage this project."
+    - label: "Critique constructive"
+      input: "The design could be improved, here are three suggestions to consider."
+    idees_usage:
+    - "Bloquer l'envoi d'un message de support avant qu'il ne parte, avec un avertissement à l'agent."
+    - "Trier automatiquement les tickets de support par ton avant affectation à un conseiller."
+    - "Surveiller un canal interne pour repérer les échanges qui dégénèrent."
+    - "Comparer le taux de messages toxiques avant et après une nouvelle charte de modération."
+    - "Servir de garde-fou avant publication automatique d'un commentaire généré par une IA."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/s-nlp/roberta_toxicity_classifier
+  mode_emploi: "pip install transformers torch, puis AutoModelForSequenceClassification.from_pretrained(\"s-nlp/roberta_toxicity_classifier\") + le tokenizer associé."
+- id: distilbert-toxicite-legere
+  nom: DistilBERT (toxicité EN, léger)
+  famille: moderation_toxicite
+  secteur: Réseaux sociaux / communauté en ligne
+  moteur: transformers
+  moteur_ref: martin-ha/toxic-comment-model
+  taille: 66 millions de paramètres (distillé)
+  description_pedagogique: >-
+    La version la plus légère et rapide des trois modèles de modération en anglais du catalogue —
+    utile pour illustrer le compromis vitesse/précision. Sa documentation officielle signale
+    elle-même un biais connu : le modèle peut sur-classer comme "toxiques" des phrases neutres
+    mentionnant certains groupes identitaires, un vrai cas d'école sur les biais hérités des
+    données d'entraînement.
+  cas_usage:
+    enonce: "Détecter rapidement si un commentaire est toxique, en priorisant la vitesse."
+    exemples:
+    - label: "Commentaire neutre"
+      input: "This tutorial was very clear, thank you for sharing it."
+    - label: "Commentaire insultant"
+      input: "What a stupid comment, did you even think before posting this?"
+    - label: "Critique de produit"
+      input: "This product broke after two days, I am very disappointed."
+    - label: "Menace voilée"
+      input: "People like you should not be allowed to post here anymore."
+    - label: "Phrase neutre mentionnant un groupe (test de biais)"
+      input: "She is a Muslim woman who works as an engineer in our team."
+    idees_usage:
+    - "Filtrer en temps réel les commentaires d'un live streaming, où la latence doit rester minimale."
+    - "Faire un premier tri très rapide avant un second passage par un modèle plus précis (Toxic-BERT)."
+    - "Illustrer en formation interne comment un biais de modération peut pénaliser à tort certains groupes."
+    - "Auditer un jeu de commentaires existant pour repérer les faux positifs liés au biais documenté."
+    - "Servir de filtre léger embarqué sur un serveur aux ressources limitées."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/martin-ha/toxic-comment-model
+  mode_emploi: "pip install transformers torch, puis AutoModelForSequenceClassification.from_pretrained(\"martin-ha/toxic-comment-model\") + le tokenizer associé."
+- id: xlmr-toxicite-multilingue
+  nom: XLM-RoBERTa (toxicité multilingue, FR)
+  famille: moderation_toxicite
+  secteur: Réseaux sociaux / communauté en ligne
+  moteur: transformers
+  moteur_ref: unitary/multilingual-toxic-xlm-roberta
+  taille: 278 millions de paramètres
+  description_pedagogique: >-
+    Seul modèle de modération du catalogue qui comprend directement le français (ainsi que
+    l'espagnol, l'italien, le portugais, le turc et le russe) sans passer par une traduction
+    préalable. Contrairement à Toxic-BERT, il ne rend qu'un seul score de toxicité globale plutôt
+    que six catégories détaillées — un compromis pour couvrir plusieurs langues à la fois.
+  cas_usage:
+    enonce: "Évaluer le score de toxicité globale d'un message en français."
+    exemples:
+    - label: "Message neutre"
+      input: "Merci pour votre réponse rapide, tout est clair pour moi."
+    - label: "Insulte directe"
+      input: "Tu es vraiment nul, arrête de perdre le temps de tout le monde."
+    - label: "Menace"
+      input: "Continue comme ça et tu vas le regretter très vite."
+    - label: "Désaccord poli"
+      input: "Je ne suis pas d'accord avec cette décision, on devrait en reparler."
+    - label: "Commentaire sarcastique"
+      input: "Ah bravo, encore une idée de génie venue de notre équipe."
+    idees_usage:
+    - "Modérer les commentaires en français d'une page professionnelle sur un réseau social."
+    - "Filtrer les messages d'un forum d'entraide francophone avant publication."
+    - "Surveiller un chat de jeu vidéo francophone en direct."
+    - "Prioriser la modération humaine d'une communauté multilingue par langue détectée."
+    - "Comparer le niveau de toxicité entre plusieurs communautés linguistiques d'un même produit."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/unitary/multilingual-toxic-xlm-roberta
+  mode_emploi: "pip install transformers torch, puis pipeline(\"text-classification\", model=\"unitary/multilingual-toxic-xlm-roberta\", top_k=None)."
+- id: distilbert-zero-shot
+  nom: DistilBERT (classification zero-shot, EN)
+  famille: classification_zero_shot
+  secteur: Veille / organisation de contenu
+  moteur: transformers
+  moteur_ref: typeform/distilbert-base-uncased-mnli
+  taille: 67 millions de paramètres (distillé)
+  description_pedagogique: >-
+    Un modèle radicalement différent des classifieurs vus jusqu'ici : au lieu d'apprendre un jeu
+    fixe d'étiquettes à l'entraînement, il évalue si un texte "implique" chacune des catégories
+    qu'on lui propose au moment de l'essai — on peut donc changer les catégories sans jamais
+    ré-entraîner le modèle. Technique dite d'inférence en langage naturel (NLI), détournée pour
+    faire de la classification "zero-shot" (sans exemple).
+  cas_usage:
+    enonce: "Classer un texte parmi des catégories choisies au moment de l'essai, jamais vues à l'entraînement."
+    exemples:
+    - label: "Actualité technologique"
+      input: "The company unveiled its new processor built on a smaller, faster chip architecture."
+    - label: "Actualité sportive"
+      input: "The team secured a dramatic victory in the final minutes of the match."
+    - label: "Actualité économique"
+      input: "The central bank raised interest rates for the third time this year."
+    - label: "Actualité santé"
+      input: "Researchers published new findings on the effectiveness of the vaccine."
+    - label: "Actualité culturelle"
+      input: "The museum announced a new exhibition dedicated to modern art."
+    idees_usage:
+    - "Trier automatiquement une revue de presse par thème, sans avoir à constituer un jeu d'entraînement."
+    - "Router un ticket de support vers la bonne équipe en testant les catégories internes de l'entreprise."
+    - "Étiqueter un corpus de documents existant selon une nomenclature métier propre à l'organisation."
+    - "Tester rapidement une nouvelle taxonomie de contenu avant de décider si elle mérite un vrai modèle dédié."
+    - "Détecter le sujet dominant d'un avis client parmi une liste de thèmes définie à la volée."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/typeform/distilbert-base-uncased-mnli
+  mode_emploi: "pip install transformers torch, puis pipeline(\"zero-shot-classification\", model=\"typeform/distilbert-base-uncased-mnli\"), en passant la liste de catégories candidates à chaque appel."
+- id: mdeberta-zero-shot-fr
+  nom: mDeBERTa-v3 (classification zero-shot, FR)
+  famille: classification_zero_shot
+  secteur: Veille / organisation de contenu
+  moteur: transformers
+  moteur_ref: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  taille: 279 millions de paramètres
+  description_pedagogique: >-
+    Même principe que le modèle précédent (classification "zero-shot" par inférence en langage
+    naturel), mais entraîné sur 27 langues dont le français — le modèle le plus téléchargé de sa
+    catégorie sur HuggingFace, ce qui en fait une référence solide plutôt qu'un choix
+    expérimental.
+  cas_usage:
+    enonce: "Classer un texte en français parmi des catégories choisies au moment de l'essai."
+    exemples:
+    - label: "Actualité technologique"
+      input: "L'entreprise a présenté son nouveau processeur, gravé plus finement pour plus de rapidité."
+    - label: "Actualité sportive"
+      input: "L'équipe a arraché la victoire dans les dernières minutes du match."
+    - label: "Actualité économique"
+      input: "La banque centrale a relevé ses taux d'intérêt pour la troisième fois cette année."
+    - label: "Actualité santé"
+      input: "Des chercheurs ont publié de nouveaux résultats sur l'efficacité du vaccin."
+    - label: "Actualité culturelle"
+      input: "Le musée a annoncé une nouvelle exposition consacrée à l'art moderne."
+    idees_usage:
+    - "Trier une revue de presse francophone par thème sans jeu d'entraînement dédié."
+    - "Router un ticket de support en français vers la bonne équipe selon les catégories internes."
+    - "Étiqueter automatiquement un corpus de documents administratifs selon une nomenclature métier."
+    - "Détecter le thème dominant d'un avis client en français parmi une liste définie à la volée."
+    - "Pré-classer les demandes entrantes d'un formulaire de contact avant tri humain."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  mode_emploi: "pip install transformers torch sentencepiece, puis pipeline(\"zero-shot-classification\", model=\"MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7\")."
+- id: t5-generation-questions-fr
+  nom: T5 (génération de questions)
+  famille: generation_questions
+  secteur: Éducation / formation
+  moteur: transformers
+  moteur_ref: JDBN/t5-base-fr-qg-fquad
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Équivalent francophone du modèle précédent, entraîné sur les jeux de données français FQuAD
+    et PIAF plutôt que sur leurs équivalents anglais — même mécanique, mais directement
+    utilisable sur un support de cours ou une documentation en français.
+  cas_usage:
+    enonce: "Générer une question en français dont la réponse se trouve dans le texte fourni."
+    exemples:
+    - label: "Fait historique"
+      input: "La tour Eiffel a été achevée en 1889 et est restée la plus haute structure du monde pendant 41 ans."
+    - label: "Définition technique"
+      input: "La photosynthèse est le processus par lequel les plantes convertissent la lumière du soleil en énergie chimique."
+    - label: "Fait scientifique"
+      input: "L'eau bout à 100 degrés Celsius au niveau de la mer, mais à une température plus basse en altitude."
+    - label: "Événement d'entreprise"
+      input: "L'entreprise a été fondée en 2015 et emploie aujourd'hui plus de trois mille personnes dans le monde."
+    - label: "Procédure"
+      input: "Pour réinitialiser l'appareil, maintenez le bouton d'alimentation pendant dix secondes jusqu'à extinction de l'écran."
+    idees_usage:
+    - "Générer des questions de révision à partir d'un support de cours en français."
+    - "Créer un premier jet de quiz pour un module e-learning francophone."
+    - "Transformer une documentation technique française en FAQ, une question par paragraphe."
+    - "Aider un formateur à préparer des questions d'évaluation à partir d'un texte source français."
+    - "Fabriquer des exercices de compréhension de texte pour des apprenants en français."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/JDBN/t5-base-fr-qg-fquad
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"JDBN/t5-base-fr-qg-fquad\") + le tokenizer, avec le préfixe \"generate question: \" devant le texte."
+- id: t5-correction-grammaticale
+  nom: T5 (correction grammaticale, EN)
+  famille: correction_grammaticale
+  secteur: Rédaction / communication
+  moteur: transformers
+  moteur_ref: vennify/t5-base-grammar-correction
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Un modèle seq2seq entraîné spécifiquement à corriger les fautes de grammaire d'un texte, sans
+    le reformuler ni le résumer — il rend le texte corrigé, phrase pour phrase. Référence la plus
+    téléchargée de sa catégorie sur HuggingFace, entraînée sur le jeu de données académique
+    JFLEG.
+  cas_usage:
+    enonce: "Corriger les fautes de grammaire d'un texte en anglais."
+    exemples:
+    - label: "Faute de conjugaison"
+      input: "She go to the office every day and she work very hard."
+    - label: "Faute d'accord"
+      input: "The teams was ready for the competition since two week."
+    - label: "Faute de structure"
+      input: "He don't know where is the meeting room located."
+    - label: "Phrase correcte (test de non-régression)"
+      input: "The meeting has been rescheduled to next Tuesday at three o'clock."
+    - label: "Fautes multiples"
+      input: "Yesterday I go to store and buyed some breads for the diner."
+    idees_usage:
+    - "Relire automatiquement un email professionnel avant envoi pour repérer les fautes évidentes."
+    - "Corriger en masse les fiches produit d'un catalogue rédigées par plusieurs contributeurs."
+    - "Fournir une première passe de correction avant relecture humaine d'un rapport."
+    - "Aider un non-natif à vérifier la grammaire d'un message avant de le publier."
+    - "Détecter automatiquement les textes qui nécessitent une relecture humaine approfondie."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/vennify/t5-base-grammar-correction
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"vennify/t5-base-grammar-correction\") + le tokenizer, avec le préfixe \"grammar: \" devant le texte."
+- id: t5-correction-grammaticale-legere
+  nom: T5 (correction grammaticale légère, EN)
+  famille: correction_grammaticale
+  secteur: Rédaction / communication
+  moteur: transformers
+  moteur_ref: pszemraj/grammar-synthesis-small
+  taille: 77 millions de paramètres
+  description_pedagogique: >-
+    Version nettement plus légère que le modèle précédent (77 contre 220 millions de
+    paramètres), pour illustrer le même compromis vitesse/précision déjà vu sur la modération de
+    contenu — utile pour une correction en direct pendant la frappe plutôt qu'en différé sur un
+    long document.
+  cas_usage:
+    enonce: "Corriger rapidement les fautes de grammaire d'un texte court en anglais."
+    exemples:
+    - label: "Faute de conjugaison"
+      input: "He were working late every night this week."
+    - label: "Faute d'accord"
+      input: "There is many reasons to change the plan now."
+    - label: "Faute de structure"
+      input: "I am agree with what you are saying about the project."
+    - label: "Phrase correcte (test de non-régression)"
+      input: "We will finalize the contract by the end of the month."
+    - label: "Fautes multiples"
+      input: "She dont have no time to finish the report before Friday."
+    idees_usage:
+    - "Corriger en direct un champ de saisie court (commentaire, message de chat) pendant la frappe."
+    - "Vérifier rapidement une notification ou un message système généré automatiquement."
+    - "Servir de premier filtre léger avant un second passage par un modèle plus complet."
+    - "Corriger les légendes courtes d'un réseau social avant publication."
+    - "Intégrer une correction embarquée dans un formulaire web sans latence perceptible."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/pszemraj/grammar-synthesis-small
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"pszemraj/grammar-synthesis-small\") + le tokenizer."
+- id: t5-correction-grammaticale-fr
+  nom: T5 (correction orthographe/grammaire, FR)
+  famille: correction_grammaticale
+  secteur: Rédaction / communication
+  moteur: transformers
+  moteur_ref: fdemelo/t5-base-spell-correction-fr
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Équivalent francophone des deux modèles précédents, entraîné sur un corpus de presse
+    française pour corriger orthographe et ponctuation — le seul des trois directement
+    utilisable sur un texte en français sans passer par une traduction préalable.
+  cas_usage:
+    enonce: "Corriger l'orthographe et la ponctuation d'un texte en français."
+    exemples:
+    - label: "Faute d'accord"
+      input: "Les enfant sont arrivé en retard a l'école ce matin."
+    - label: "Ponctuation manquante"
+      input: "Bonjour comment allez vous jespere que tout va bien"
+    - label: "Faute de conjugaison"
+      input: "Il faut que je parle avec elle avant qu'il part demain."
+    - label: "Phrase correcte (test de non-régression)"
+      input: "La réunion aura lieu mardi prochain à quatorze heures."
+    - label: "Fautes multiples"
+      input: "Je c'est pas si on va pouvoir finir le rapport avant vendredi la"
+    idees_usage:
+    - "Corriger automatiquement les fiches produit rédigées par plusieurs contributeurs francophones."
+    - "Relire un email professionnel en français avant envoi pour repérer les fautes évidentes."
+    - "Fournir une première passe de correction avant relecture humaine d'un document interne."
+    - "Vérifier l'orthographe des commentaires publiés sur un site francophone."
+    - "Aider un service client à professionnaliser rapidement des réponses écrites dans l'urgence."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/fdemelo/t5-base-spell-correction-fr
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"fdemelo/t5-base-spell-correction-fr\") + le tokenizer, avec le préfixe \"grammaire: \" devant le texte."
+- id: blip-legende-image
+  nom: BLIP (légendage d'image)
+  famille: legende_image
+  secteur: Accessibilité / e-commerce
+  moteur: transformers
+  moteur_ref: Salesforce/blip-image-captioning-base
+  taille: 247 millions de paramètres
+  description_pedagogique: >-
+    Un modèle qui associe deux briques déjà vues séparément dans le catalogue : un encodeur de
+    vision qui "regarde" l'image, et un générateur de texte qui rédige une phrase la décrivant —
+    le modèle de légendage d'image le plus téléchargé sur HuggingFace, référence du domaine.
+  cas_usage:
+    enonce: "Décrire en une phrase le contenu d'une image d'exemple fournie par l'outil."
+    exemples: []
+    idees_usage:
+    - "Générer automatiquement un texte alternatif (attribut alt) pour l'accessibilité d'un site web."
+    - "Rédiger une première description de produit à partir d'une photo, à relire avant publication."
+    - "Indexer une photothèque d'entreprise par contenu visuel plutôt que par nom de fichier."
+    - "Décrire le contenu d'une image à un utilisateur malvoyant via un lecteur d'écran."
+    - "Pré-remplir la légende d'une photo avant publication sur un réseau social."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/Salesforce/blip-image-captioning-base
+  mode_emploi: "pip install transformers torch Pillow, puis pipeline(\"image-to-text\", model=\"Salesforce/blip-image-captioning-base\")."
+- id: git-legende-image
+  nom: GIT (légendage d'image, COCO)
+  famille: legende_image
+  secteur: Accessibilité / e-commerce
+  moteur: transformers
+  moteur_ref: microsoft/git-base-coco
+  taille: 176 millions de paramètres
+  description_pedagogique: >-
+    Architecture différente de BLIP pour la même tâche (GIT, "Generative Image-to-Text", de
+    Microsoft) : un seul transformeur traite conjointement l'image et le texte plutôt que deux
+    briques séparées — plus léger que BLIP, spécifiquement affiné sur le jeu de données COCO pour
+    le légendage.
+  cas_usage:
+    enonce: "Décrire en une phrase le contenu d'une image d'exemple, avec une architecture différente de BLIP."
+    exemples: []
+    idees_usage:
+    - "Comparer les légendes générées par GIT et BLIP sur la même image pour illustrer la variabilité des modèles."
+    - "Générer un texte alternatif léger pour l'accessibilité d'une application mobile aux ressources limitées."
+    - "Indexer rapidement un grand volume d'images par contenu visuel."
+    - "Pré-remplir une légende de produit e-commerce à partir d'une photo."
+    - "Fournir une description automatique dans un pipeline de modération de contenu visuel."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/microsoft/git-base-coco
+  mode_emploi: "pip install transformers torch Pillow, puis pipeline(\"image-to-text\", model=\"microsoft/git-base-coco\")."
+- id: vitgpt2-legende-image
+  nom: ViT-GPT2 (légendage d'image)
+  famille: legende_image
+  secteur: Accessibilité / e-commerce
+  moteur: transformers
+  moteur_ref: nlpconnect/vit-gpt2-image-captioning
+  taille: 210 millions de paramètres (ViT 86M + GPT-2 124M)
+  description_pedagogique: >-
+    Troisième approche pour la même tâche : un ViT (Vision Transformer) déjà entraîné pour "voir"
+    associé à un GPT-2 déjà entraîné pour "écrire", assemblés puis affinés ensemble — assemblage
+    de deux briques connues séparément plutôt qu'une architecture pensée d'emblée pour le duo
+    image+texte.
+  cas_usage:
+    enonce: "Décrire en une phrase le contenu d'une image, via l'assemblage d'un ViT et d'un GPT-2."
+    exemples: []
+    idees_usage:
+    - "Illustrer en formation comment deux modèles pré-entraînés séparément peuvent être combinés."
+    - "Générer une description de secours si un autre modèle de légendage échoue ou est indisponible."
+    - "Comparer la qualité des légendes générées par les trois architectures du catalogue (BLIP, GIT, ViT-GPT2)."
+    - "Décrire automatiquement une image dans une application d'aide à la navigation pour non-voyants."
+    - "Fournir une légende de repli pour l'indexation d'une photothèque."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/nlpconnect/vit-gpt2-image-captioning
+  mode_emploi: "pip install transformers torch Pillow, puis pipeline(\"image-to-text\", model=\"nlpconnect/vit-gpt2-image-captioning\")."
+- id: ast-classification-audio
+  nom: AST (classification de sons)
+  famille: classification_audio
+  secteur: Sécurité / supervision
+  moteur: transformers
+  moteur_ref: MIT/ast-finetuned-audioset-10-10-0.4593
+  taille: 87 millions de paramètres
+  description_pedagogique: >-
+    Contrairement à Whisper (qui transcrit la parole en texte), ce modèle reconnaît le type de
+    son entendu — alarme, aboiement, klaxon, musique, moteur... parmi 527 catégories du jeu de
+    données AudioSet (Google). Il traite le son comme une image (un spectrogramme) plutôt que
+    comme une séquence de mots, d'où son nom d'Audio Spectrogram Transformer.
+  cas_usage:
+    enonce: "Reconnaître le type de son présent dans un échantillon audio d'exemple."
+    exemples: []
+    idees_usage:
+    - "Déclencher une alerte de sécurité automatique à la détection d'un bris de verre ou d'une alarme."
+    - "Détecter la présence d'un aboiement ou d'un cri sur un système de vidéosurveillance sonore."
+    - "Classer automatiquement une bibliothèque de sons d'ambiance pour un jeu vidéo ou un film."
+    - "Repérer un bruit de machine anormal dans un environnement industriel bruyant."
+    - "Distinguer la parole de la musique dans un flux radio pour automatiser le minutage des chroniques."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/MIT/ast-finetuned-audioset-10-10-0.4593
+  mode_emploi: "pip install transformers torch soundfile, puis pipeline(\"audio-classification\", model=\"MIT/ast-finetuned-audioset-10-10-0.4593\")."
+- id: scoring-tarification-auto
+  nom: Régression logistique — tarification auto
+  famille: scoring_assurance
+  secteur: Assurance IARD — tarification auto
+  moteur: scikit-learn
+  moteur_ref: entraînement en direct (pas de modèle pré-entraîné téléchargé)
+  taille: modèle jouet entraîné à la demande
+  description_pedagogique: >-
+    Même technique que le scoring de crédit bancaire (régression logistique), appliquée cette
+    fois à la tarification automobile — le modèle apprend en quelques millisecondes à partir de
+    60 profils jouets, sans jamais avoir vu de vraie base de sinistres. Illustre comment une
+    poignée de variables déclaratives (âge, ancienneté du permis, antécédents) suffit à un
+    algorithme classique pour distinguer des profils de risque.
+  cas_usage:
+    enonce: "Estimer la probabilité de risque d'un profil de conducteur, à partir de quelques variables."
+    exemples: []
+    idees_usage:
+    - "Pré-calculer une fourchette tarifaire indicative avant l'intervention d'un souscripteur humain."
+    - "Détecter automatiquement les profils qui nécessitent une étude approfondie plutôt qu'un tarif standard."
+    - "Simuler l'impact d'un nouveau critère de tarification avant de le déployer en production."
+    - "Former de nouveaux souscripteurs à comprendre les variables qui pèsent le plus dans le risque."
+    - "Objectiver une grille tarifaire pour en vérifier la cohérence interne."
+  statut: disponible
+  lien_telechargement: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+  mode_emploi: "pip install scikit-learn numpy, puis LogisticRegression().fit(X, y) sur les 3 variables (âge, ancienneté du permis, sinistres 3 ans)."
+- id: isolation-forest-sinistre-auto
+  nom: Isolation Forest — sinistres auto
+  famille: anomalie
+  secteur: Assurance IARD — détection de fraude sinistre
+  moteur: scikit-learn
+  moteur_ref: entraînement en direct (pas de modèle pré-entraîné téléchargé)
+  taille: modèle jouet entraîné à la demande
+  description_pedagogique: >-
+    Même algorithme (Isolation Forest) que la détection de fraude bancaire ou la maintenance
+    prédictive du catalogue, appliqué cette fois aux montants de sinistres auto déclarés — sans
+    aucune règle de seuil écrite à l'avance, le modèle apprend seul ce qu'est un montant "normal"
+    à partir de l'historique, puis signale ce qui s'en écarte statistiquement.
+  cas_usage:
+    enonce: "Repérer les montants de sinistres qui s'écartent statistiquement de la distribution habituelle."
+    exemples: []
+    idees_usage:
+    - "Prioriser la file d'expertise en remontant d'abord les dossiers au montant statistiquement inhabituel."
+    - "Servir de premier filtre avant l'intervention d'un enquêteur anti-fraude humain."
+    - "Suivre l'évolution du profil de sinistralité d'un portefeuille mois après mois."
+    - "Détecter une dérive soudaine (ex. hausse anormale des montants déclarés sur une zone géographique)."
+    - "Objectiver les critères de déclenchement d'une contre-expertise, plutôt qu'un seuil fixe arbitraire."
+  statut: disponible
+  lien_telechargement: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
+  mode_emploi: "pip install scikit-learn numpy, puis IsolationForest(contamination=0.012).fit(X) sur l'historique des montants déclarés."
+- id: mdeberta-zero-shot-type-sinistre
+  nom: mDeBERTa-v3 — tri automatique des sinistres
+  famille: classification_zero_shot
+  secteur: Assurance IARD — tri des déclarations de sinistre
+  moteur: transformers
+  moteur_ref: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  taille: 279 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de classification zero-shot que celui du catalogue général, mais mobilisé ici
+    avec des catégories propres à l'assurance dommages (dégât des eaux, vol, incendie, bris de
+    glace, catastrophe naturelle, accident responsable) — la preuve concrète qu'un même modèle se
+    reconfigure pour un métier précis sans jamais être ré-entraîné, juste en changeant la liste de
+    catégories passée au moment de l'essai.
+  cas_usage:
+    enonce: "Classer une déclaration de sinistre en français parmi les catégories usuelles de l'assurance dommages."
+    exemples:
+    - label: "Dégât des eaux"
+      input: "Une fuite est apparue sous l'évier de la cuisine et a endommagé le parquet du salon."
+    - label: "Vol"
+      input: "Le véhicule a été fracturé cette nuit sur le parking et l'autoradio a disparu."
+    - label: "Bris de glace"
+      input: "Un caillou projeté par un camion a fissuré le pare-brise sur l'autoroute."
+    - label: "Catastrophe naturelle"
+      input: "La tempête de la semaine dernière a arraché plusieurs tuiles de la toiture."
+    - label: "Accident responsable"
+      input: "J'ai reculé en marche arrière et heurté le véhicule garé derrière moi sur le parking du supermarché."
+    idees_usage:
+    - "Router automatiquement une déclaration de sinistre vers le bon service d'expertise selon son type."
+    - "Pré-remplir la catégorie d'un dossier de sinistre à partir de la description libre de l'assuré."
+    - "Suivre la répartition des types de sinistres déclarés sur un portefeuille, sans étiquetage manuel."
+    - "Adapter automatiquement le questionnaire de déclaration en ligne selon le type détecté."
+    - "Détecter les déclarations ambiguës qui nécessitent une reformulation avant traitement."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  mode_emploi: "pip install transformers torch sentencepiece, puis pipeline(\"zero-shot-classification\", model=\"MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7\"), avec les catégories de sinistres comme candidats."
+- id: camembert-ner-constat-auto
+  nom: CamemBERT NER — constat amiable
+  famille: extraction_entites
+  secteur: Assurance IARD — traitement des constats amiables
+  moteur: transformers
+  moteur_ref: Jean-Baptiste/camembert-ner
+  taille: 110 millions de paramètres
+  description_pedagogique: >-
+    Même modèle d'extraction d'entités que celui du catalogue général (personnes, lieux,
+    organisations), mobilisé ici pour repérer automatiquement les informations clés d'une
+    description de sinistre en texte libre — un gain de temps réel avant la saisie manuelle dans
+    un système de gestion.
+  cas_usage:
+    enonce: "Extraire automatiquement les entités nommées d'une description de sinistre auto."
+    exemples:
+    - label: "Description avec tiers identifié"
+      input: "Le véhicule de Monsieur Lefebvre a percuté le mien à Lyon, au croisement de la rue Garibaldi."
+    - label: "Accident avec société tierce"
+      input: "Un camion de la société Dupont Transport a endommagé mon portail à Nantes le mois dernier."
+    - label: "Sinistre habitation avec voisin"
+      input: "Madame Rousseau, ma voisine, a signalé une infiltration provenant de mon appartement à Marseille."
+    idees_usage:
+    - "Pré-remplir automatiquement les champs d'un dossier de sinistre à partir du récit de l'assuré."
+    - "Repérer les tiers impliqués dans un accident pour accélérer le recours entre assureurs."
+    - "Extraire les lieux mentionnés pour cartographier la sinistralité par zone géographique."
+    - "Vérifier la cohérence entre les entités citées dans le constat et celles du contrat souscrit."
+    - "Alimenter automatiquement un tableau de suivi de sinistres à partir des déclarations écrites."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/Jean-Baptiste/camembert-ner
+  mode_emploi: "pip install transformers torch, puis pipeline(\"ner\", model=\"Jean-Baptiste/camembert-ner\", aggregation_strategy=\"simple\")."
+- id: barthez-resume-expertise-degats
+  nom: T5 — résumé de rapport d'expertise
+  famille: resume_automatique
+  secteur: Assurance IARD — expertise dommages
+  moteur: transformers
+  moteur_ref: plguillou/t5-base-fr-sum-cnndm
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de résumé automatique que celui du catalogue général, mobilisé ici pour condenser
+    un rapport d'expertise dommages en quelques phrases — utile pour donner à un gestionnaire de
+    sinistres une vue rapide avant de se plonger dans le rapport complet.
+  cas_usage:
+    enonce: "Résumer un rapport d'expertise dommages en quelques phrases."
+    exemples:
+    - label: "Rapport dégât des eaux"
+      input: "L'expertise réalisée sur place confirme une fuite provenant d'un raccord de la salle de bain à l'étage. Les infiltrations ont endommagé le plafond et une partie du parquet du salon situé en dessous. Le mobilier n'a pas été touché. Le coût de remise en état est estimé à 4200 euros, incluant la réparation de la fuite, le séchage des murs et la réfection du plafond. Aucune trace de vétusté anormale n'a été relevée sur l'installation."
+    idees_usage:
+    - "Donner à un gestionnaire de sinistres un résumé rapide avant l'ouverture du rapport complet."
+    - "Alimenter automatiquement une synthèse de dossier transmise à l'assuré."
+    - "Comparer rapidement plusieurs rapports d'expertise sur un même type de sinistre."
+    - "Préparer un compte-rendu de portefeuille sinistres pour un comité de pilotage."
+    - "Extraire l'essentiel d'un rapport avant une réunion de médiation avec l'assuré."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/plguillou/t5-base-fr-sum-cnndm
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"plguillou/t5-base-fr-sum-cnndm\") + le tokenizer."
+- id: xlmr-toxicite-reclamation-assurance
+  nom: XLM-RoBERTa — réclamations agressives
+  famille: moderation_toxicite
+  secteur: Assurance IARD — relation client / réclamations
+  moteur: transformers
+  moteur_ref: unitary/multilingual-toxic-xlm-roberta
+  taille: 278 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de détection de toxicité multilingue que celui du catalogue général, mobilisé ici
+    pour repérer les réclamations les plus véhémentes dans un flux de messages clients — un
+    signal pour prioriser un rappel humain rapide, pas pour filtrer ou ignorer le message.
+  cas_usage:
+    enonce: "Évaluer le niveau de toxicité d'une réclamation client en français."
+    exemples:
+    - label: "Réclamation posée"
+      input: "Je souhaite un point sur l'avancement de mon dossier de sinistre, ouvert il y a trois semaines."
+    - label: "Réclamation véhémente"
+      input: "Ça fait trois mois que j'attends, votre service est une honte, je vais tout résilier."
+    - label: "Menace"
+      input: "Si je n'ai pas de réponse cette semaine je porte plainte contre votre entreprise."
+    idees_usage:
+    - "Prioriser le rappel téléphonique des réclamations les plus tendues plutôt qu'un traitement par ordre d'arrivée."
+    - "Alerter un responsable qualité quand une réclamation dépasse un seuil de véhémence."
+    - "Mesurer l'évolution du climat des réclamations avant et après un changement de process."
+    - "Adapter le ton de la réponse automatique proposée à un conseiller selon la tension détectée."
+    - "Identifier les sujets qui suscitent le plus de réclamations véhémentes pour agir en amont."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/unitary/multilingual-toxic-xlm-roberta
+  mode_emploi: "pip install transformers torch, puis pipeline(\"text-classification\", model=\"unitary/multilingual-toxic-xlm-roberta\")."
+- id: camembert-qa-contrat-habitation
+  nom: CamemBERT Question-Réponse — contrat habitation
+  famille: question_reponse
+  secteur: Assurance IARD — contrat habitation
+  moteur: transformers
+  moteur_ref: etalab-ia/camembert-base-squadFR-fquad-piaf
+  taille: 110 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de question-réponse extractive que celui du catalogue général, mobilisé ici sur
+    un extrait de conditions générales d'assurance habitation — la réponse reste toujours un
+    passage vérifiable du texte fourni, jamais une reformulation inventée.
+  cas_usage:
+    enonce: "Répondre à une question sur un contrat d'assurance habitation à partir d'un extrait de conditions générales."
+    exemples:
+    - label: "Garantie dégât des eaux"
+      input: "Contexte : La garantie dégât des eaux couvre les fuites accidentelles de canalisation ainsi que les infiltrations par toiture, dans la limite de 15000 euros par sinistre. Elle ne couvre pas les dommages liés à un défaut d'entretien. Question : Quel est le plafond de la garantie dégât des eaux ?"
+    - label: "Délai de déclaration"
+      input: "Contexte : Tout sinistre doit être déclaré dans un délai de 5 jours ouvrés à compter de sa découverte, sauf en cas de vol où ce délai est réduit à 2 jours ouvrés. Question : Combien de temps a-t-on pour déclarer un vol ?"
+    idees_usage:
+    - "Répondre instantanément aux questions des assurés sur leurs garanties, sans mobiliser un conseiller."
+    - "Aider un nouveau conseiller à retrouver rapidement une clause précise dans des conditions générales longues."
+    - "Vérifier la cohérence des réponses données par un chatbot avec le texte contractuel de référence."
+    - "Extraire automatiquement les délais et plafonds clés d'un contrat pour alimenter une fiche de synthèse."
+    - "Pré-qualifier une demande client en confrontant sa question au texte contractuel avant transfert à un humain."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/etalab-ia/camembert-base-squadFR-fquad-piaf
+  mode_emploi: "pip install transformers torch, puis AutoModelForQuestionAnswering.from_pretrained(\"etalab-ia/camembert-base-squadFR-fquad-piaf\") + le tokenizer."
+- id: chronos-previsions-frequence-sinistres
+  nom: Chronos Bolt (tiny) — fréquence de sinistres
+  famille: series_temporelles
+  secteur: Assurance IARD — pilotage de la sinistralité
+  moteur: chronos
+  moteur_ref: amazon/chronos-bolt-tiny
+  taille: 9 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de prévision que celui du catalogue général, appliqué ici à une série jouet de
+    fréquence mensuelle de sinistres auto — avec un pic hivernal simulé (verglas, tempêtes),
+    pour illustrer comment un modèle de séries temporelles capte à la fois une tendance et une
+    saisonnalité sans qu'on les lui décrive explicitement.
+  cas_usage:
+    enonce: "Prévoir la fréquence mensuelle de sinistres des prochains mois à partir de l'historique."
+    exemples: []
+    idees_usage:
+    - "Anticiper les besoins en personnel d'expertise selon la saisonnalité attendue des sinistres."
+    - "Dimensionner une provision technique en fonction de la fréquence prévisionnelle."
+    - "Détecter un écart significatif entre la fréquence observée et la fréquence prévue, signe d'un événement inhabituel."
+    - "Présenter en comité de pilotage une projection de sinistralité pour les mois à venir."
+    - "Comparer la saisonnalité de plusieurs garanties (auto, habitation) pour mieux répartir les ressources."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/amazon/chronos-bolt-tiny
+  mode_emploi: "pip install chronos-forecasting torch, puis BaseChronosPipeline.from_pretrained(\"amazon/chronos-bolt-tiny\", device_map=\"cpu\")."
+- id: tesseract-ocr-facture-reparation
+  nom: Tesseract OCR — facture de réparation
+  famille: ocr
+  secteur: Assurance IARD — indemnisation
+  moteur: tesseract
+  moteur_ref: tesseract-ocr (moteur classique, pas un LLM)
+  taille: moteur classique, pas un réseau de neurones
+  description_pedagogique: >-
+    Même moteur OCR classique que celui du catalogue général, appliqué ici à une facture de
+    réparation automobile générée à la volée — la première étape avant tout remboursement
+    automatisé : transformer un document scanné en texte exploitable par le système de gestion.
+  cas_usage:
+    enonce: "Extraire le texte d'une facture de réparation automobile scannée."
+    exemples: []
+    idees_usage:
+    - "Extraire automatiquement le montant d'une facture de garage pour accélérer le remboursement."
+    - "Vérifier la cohérence entre le montant facturé et le montant estimé par l'expert."
+    - "Archiver les factures de réparation sous forme de texte recherchable plutôt que d'images figées."
+    - "Détecter les factures dont le texte extrait est incohérent, signe d'un document à vérifier manuellement."
+    - "Alimenter automatiquement un dossier de sinistre à partir des pièces justificatives transmises par l'assuré."
+  statut: disponible
+  lien_telechargement: https://github.com/tesseract-ocr/tesseract
+  mode_emploi: "Installez le paquet système (apt install tesseract-ocr tesseract-ocr-fra), puis pip install pytesseract Pillow et appelez pytesseract.image_to_string(image, lang=\"fra\")."
+- id: t5-correction-courrier-reclamation
+  nom: T5 — relecture de courrier de réclamation
+  famille: correction_grammaticale
+  secteur: Assurance IARD — relation client
+  moteur: transformers
+  moteur_ref: fdemelo/t5-base-spell-correction-fr
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de correction orthographique et grammaticale que celui du catalogue général,
+    mobilisé ici pour relire un courrier de réponse à réclamation avant envoi — une relecture
+    automatique de premier niveau, jamais un substitut à la relecture humaine sur un document
+    engageant l'assureur.
+  cas_usage:
+    enonce: "Corriger l'orthographe et la ponctuation d'un courrier de réponse à réclamation avant envoi."
+    exemples:
+    - label: "Fautes multiples"
+      input: "Nous accusons réception de votre courier et vous informons que votre dossier a était transmis a notre service expertise."
+    - label: "Faute d'accord"
+      input: "Les pièce justificative que vous nous avez transmise on bien été reçu."
+    idees_usage:
+    - "Relire automatiquement les courriers types avant envoi à un assuré."
+    - "Fournir une première passe de correction avant validation par un responsable qualité."
+    - "Vérifier l'orthographe des réponses générées automatiquement par un autre outil avant publication."
+    - "Aider un nouveau conseiller à professionnaliser rapidement ses courriers écrits."
+    - "Détecter les courriers qui nécessitent une relecture humaine approfondie plutôt qu'un envoi direct."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/fdemelo/t5-base-spell-correction-fr
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"fdemelo/t5-base-spell-correction-fr\") + le tokenizer, avec le préfixe \"grammaire: \" devant le texte."
+- id: scoring-risque-sante
+  nom: Régression logistique — tarification santé
+  famille: scoring_assurance
+  secteur: Assurance santé — tarification mutuelle
+  moteur: scikit-learn
+  moteur_ref: entraînement en direct (pas de modèle pré-entraîné téléchargé)
+  taille: modèle jouet entraîné à la demande
+  description_pedagogique: >-
+    Même technique que le scoring de crédit ou de tarification auto (régression logistique),
+    appliquée ici à un profil de risque santé jouet — un vrai contrat de complémentaire santé
+    mobiliserait bien plus de variables et un encadrement réglementaire strict sur la
+    non-discrimination ; ceci reste une démonstration pédagogique du mécanisme, pas un outil de
+    tarification réel.
+  cas_usage:
+    enonce: "Estimer une probabilité de sur-risque santé à partir de quelques variables déclaratives."
+    exemples: []
+    idees_usage:
+    - "Illustrer en formation comment un algorithme classique combine plusieurs variables en une probabilité."
+    - "Simuler l'impact d'une nouvelle variable de tarification avant d'envisager son usage réel."
+    - "Objectiver une grille tarifaire existante pour en vérifier la cohérence interne."
+    - "Sensibiliser des équipes non techniques aux enjeux éthiques du scoring en assurance santé."
+    - "Servir de support pédagogique sur les limites réglementaires de la tarification individualisée en santé."
+  statut: disponible
+  lien_telechargement: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+  mode_emploi: "pip install scikit-learn numpy, puis LogisticRegression().fit(X, y) sur les 3 variables (âge, consultations/an, hospitalisation récente)."
+- id: isolation-forest-remboursement-sante
+  nom: Isolation Forest — remboursements santé
+  famille: anomalie
+  secteur: Assurance santé — détection de fraude aux remboursements
+  moteur: scikit-learn
+  moteur_ref: entraînement en direct (pas de modèle pré-entraîné téléchargé)
+  taille: modèle jouet entraîné à la demande
+  description_pedagogique: >-
+    Même algorithme (Isolation Forest) que la détection de fraude bancaire ou aux sinistres auto
+    du catalogue, appliqué ici aux montants de remboursements de soins — un remboursement
+    anormalement élevé n'est pas une preuve de fraude, seulement un signal statistique à vérifier
+    en priorité par un contrôleur médical.
+  cas_usage:
+    enonce: "Repérer les montants de remboursement de soins qui s'écartent statistiquement de la distribution habituelle."
+    exemples: []
+    idees_usage:
+    - "Prioriser le contrôle médical en remontant d'abord les remboursements statistiquement inhabituels."
+    - "Suivre l'évolution du profil de dépenses remboursées d'un portefeuille mois après mois."
+    - "Détecter une dérive soudaine des montants remboursés sur un acte ou un praticien donné."
+    - "Servir de premier filtre avant l'intervention d'un service de lutte anti-fraude."
+    - "Objectiver les critères de déclenchement d'un contrôle plutôt qu'un seuil fixe arbitraire."
+  statut: disponible
+  lien_telechargement: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
+  mode_emploi: "pip install scikit-learn numpy, puis IsolationForest(contamination=0.01).fit(X) sur l'historique des montants remboursés."
+- id: mdeberta-zero-shot-type-acte-medical
+  nom: mDeBERTa-v3 — tri automatique des actes médicaux
+  famille: classification_zero_shot
+  secteur: Assurance santé — tri des feuilles de soins
+  moteur: transformers
+  moteur_ref: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  taille: 279 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de classification zero-shot que celui du catalogue général, mobilisé ici avec
+    des catégories propres au remboursement santé (consultation généraliste, consultation
+    spécialiste, pharmacie, hospitalisation, dentaire, optique) — reconfigurable pour un autre
+    métier sans jamais être ré-entraîné, juste en changeant la liste de catégories.
+  cas_usage:
+    enonce: "Classer la description d'un acte médical en français parmi les catégories usuelles du remboursement santé."
+    exemples:
+    - label: "Consultation généraliste"
+      input: "Consultation de suivi chez le médecin traitant pour renouvellement d'ordonnance."
+    - label: "Consultation spécialiste"
+      input: "Rendez-vous chez le cardiologue pour un contrôle annuel."
+    - label: "Pharmacie"
+      input: "Achat de médicaments prescrits à la pharmacie du quartier."
+    - label: "Dentaire"
+      input: "Détartrage et contrôle chez le chirurgien-dentiste."
+    - label: "Optique"
+      input: "Renouvellement de la paire de lunettes chez l'opticien."
+    idees_usage:
+    - "Pré-classer une feuille de soins pour orienter automatiquement le calcul de remboursement."
+    - "Suivre la répartition des types d'actes remboursés sur un portefeuille d'assurés."
+    - "Adapter le questionnaire de télédéclaration selon le type d'acte détecté."
+    - "Repérer les descriptions d'actes ambiguës nécessitant une pièce complémentaire."
+    - "Automatiser un premier tri avant intervention d'un gestionnaire de prestations."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+  mode_emploi: "pip install transformers torch sentencepiece, puis pipeline(\"zero-shot-classification\", model=\"MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7\"), avec les catégories d'actes comme candidats."
+- id: drbert-ner-compte-rendu-medical
+  nom: DrBERT — extraction d'entités médicales
+  famille: extraction_entites
+  secteur: Assurance santé — analyse de comptes-rendus médicaux
+  moteur: transformers
+  moteur_ref: medkit/DrBERT-CASM2
+  taille: 110 millions de paramètres
+  description_pedagogique: >-
+    Contrairement à CamemBERT NER (personnes, lieux, organisations), ce modèle est spécialisé
+    dans le vocabulaire clinique : il repère les problèmes de santé, traitements et examens
+    mentionnés dans un texte médical en français. Fine-tuné à partir de DrBERT (modèle de langue
+    entraîné sur un corpus biomédical français par l'université d'Avignon). Son score de
+    précision publié (F1 = 0,74) en fait un modèle adapté à la démonstration et à
+    l'expérimentation, pas encore à un usage de production sans supervision humaine.
+  cas_usage:
+    enonce: "Extraire les problèmes de santé, traitements et examens mentionnés dans un compte-rendu médical."
+    exemples:
+    - label: "Compte-rendu de consultation"
+      input: "Le patient présente une hypertension artérielle traitée par bisoprolol. Un bilan sanguin est prescrit pour contrôler la fonction rénale."
+    - label: "Compte-rendu post-opératoire"
+      input: "Suites opératoires simples après appendicectomie. Prescription de paracétamol en cas de douleur. Une échographie de contrôle est prévue dans un mois."
+    idees_usage:
+    - "Pré-structurer un compte-rendu médical avant transmission au médecin-conseil de l'assureur."
+    - "Vérifier la cohérence entre les actes facturés et les éléments mentionnés dans le compte-rendu."
+    - "Constituer une base d'indicateurs de suivi de pathologies à partir de comptes-rendus anonymisés."
+    - "Accélérer le pré-remplissage d'un dossier d'expertise médicale."
+    - "Repérer automatiquement les traitements mentionnés pour croiser avec l'historique de remboursements."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/medkit/DrBERT-CASM2
+  mode_emploi: "pip install transformers torch, puis pipeline(\"token-classification\", model=\"medkit/DrBERT-CASM2\")."
+- id: barthez-resume-dossier-medical
+  nom: T5 — résumé de dossier médical
+  famille: resume_automatique
+  secteur: Assurance santé — médecin-conseil
+  moteur: transformers
+  moteur_ref: plguillou/t5-base-fr-sum-cnndm
+  taille: 220 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de résumé automatique que celui du catalogue général, mobilisé ici pour
+    condenser un dossier médical avant sa transmission à un médecin-conseil — un gain de temps
+    de lecture, jamais un substitut à la lecture complète du dossier avant toute décision.
+  cas_usage:
+    enonce: "Résumer un dossier médical en quelques phrases avant transmission au médecin-conseil."
+    exemples:
+    - label: "Dossier de suivi chronique"
+      input: "Le patient est suivi depuis trois ans pour un diabète de type 2, actuellement équilibré sous metformine. Les derniers bilans sanguins montrent une hémoglobine glyquée stable. Aucune complication rénale ou ophtalmologique n'a été détectée à ce jour. Le patient pratique une activité physique régulière recommandée par son médecin traitant. Un contrôle est prévu dans six mois."
+    idees_usage:
+    - "Donner à un médecin-conseil une synthèse rapide avant l'ouverture du dossier complet."
+    - "Préparer un compte-rendu de suivi pour une commission médicale."
+    - "Accélérer la préqualification d'une demande de prise en charge complémentaire."
+    - "Résumer l'historique d'un dossier avant un second avis médical."
+    - "Synthétiser plusieurs comptes-rendus successifs en une vue chronologique courte."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/plguillou/t5-base-fr-sum-cnndm
+  mode_emploi: "pip install transformers torch sentencepiece, puis AutoModelForSeq2SeqLM.from_pretrained(\"plguillou/t5-base-fr-sum-cnndm\") + le tokenizer."
+- id: camembert-sentiment-avis-patients
+  nom: CamemBERT (sentiment) — avis patients
+  famille: classification_texte
+  secteur: Assurance santé — expérience patient
+  moteur: transformers
+  moteur_ref: cmarkea/distilcamembert-base-sentiment
+  taille: 68 millions de paramètres (distillé)
+  description_pedagogique: >-
+    Même modèle de classification de sentiment que celui du catalogue général, mobilisé ici sur
+    des avis patients concernant un établissement de santé ou un réseau de soins partenaire d'une
+    complémentaire santé — pour prioriser le traitement des retours les plus négatifs.
+  cas_usage:
+    enonce: "Classer le sentiment d'un avis patient (sortie sous forme de note en étoiles)."
+    exemples:
+    - label: "Avis positif"
+      input: "L'équipe soignante a été très attentive et les délais de prise en charge ont été respectés."
+    - label: "Avis négatif"
+      input: "Plus de deux heures d'attente sans information, personnel débordé, très déçu de cette visite."
+    - label: "Avis mitigé"
+      input: "Les soins étaient de qualité mais l'accueil administratif manquait clairement de personnel."
+    idees_usage:
+    - "Prioriser le suivi des établissements partenaires selon la tonalité des avis patients reçus."
+    - "Suivre l'évolution mensuelle de la satisfaction sur un réseau de soins conventionné."
+    - "Alerter un gestionnaire de réseau quand un établissement accumule des avis très négatifs."
+    - "Comparer la satisfaction patient entre plusieurs établissements partenaires."
+    - "Alimenter un tableau de bord qualité destiné aux adhérents d'une mutuelle."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/cmarkea/distilcamembert-base-sentiment
+  mode_emploi: "pip install transformers torch, puis AutoModelForSequenceClassification.from_pretrained(\"cmarkea/distilcamembert-base-sentiment\") + le tokenizer associé."
+- id: camembert-qa-remboursement-mutuelle
+  nom: CamemBERT Question-Réponse — remboursement mutuelle
+  famille: question_reponse
+  secteur: Assurance santé — garanties mutuelle
+  moteur: transformers
+  moteur_ref: etalab-ia/camembert-base-squadFR-fquad-piaf
+  taille: 110 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de question-réponse extractive que celui du catalogue général, mobilisé ici sur
+    un extrait de garanties de complémentaire santé — la réponse reste toujours un passage
+    vérifiable du texte fourni, jamais une reformulation inventée.
+  cas_usage:
+    enonce: "Répondre à une question sur des garanties de mutuelle santé à partir d'un extrait de conditions."
+    exemples:
+    - label: "Plafond optique"
+      input: "Contexte : La garantie optique prend en charge les montures et verres dans la limite de 200 euros tous les deux ans, ainsi que les lentilles dans la limite de 150 euros par an. Question : Quel est le plafond de remboursement pour les montures et verres ?"
+    - label: "Délai de carence"
+      input: "Contexte : Un délai de carence de 3 mois s'applique aux garanties dentaires et optiques pour toute nouvelle adhésion, sauf en cas de portabilité depuis un contrat précédent. Question : Combien de temps dure le délai de carence sur les garanties dentaires ?"
+    idees_usage:
+    - "Répondre instantanément aux questions des adhérents sur leurs garanties, sans mobiliser un conseiller."
+    - "Aider un nouveau conseiller à retrouver rapidement une clause précise dans des conditions longues."
+    - "Vérifier la cohérence des réponses d'un chatbot avec le texte contractuel de référence."
+    - "Extraire automatiquement les plafonds et délais clés d'un contrat pour une fiche de synthèse adhérent."
+    - "Pré-qualifier une demande avant transfert à un conseiller humain."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/etalab-ia/camembert-base-squadFR-fquad-piaf
+  mode_emploi: "pip install transformers torch, puis AutoModelForQuestionAnswering.from_pretrained(\"etalab-ia/camembert-base-squadFR-fquad-piaf\") + le tokenizer."
+- id: chronos-previsions-depenses-sante
+  nom: Chronos Bolt (tiny) — dépenses de soins
+  famille: series_temporelles
+  secteur: Assurance santé — pilotage des dépenses de soins
+  moteur: chronos
+  moteur_ref: amazon/chronos-bolt-tiny
+  taille: 9 millions de paramètres
+  description_pedagogique: >-
+    Même modèle de prévision que celui du catalogue général, appliqué ici à une série jouet de
+    dépenses mensuelles de soins remboursées — avec un pic hivernal simulé (épidémies
+    saisonnières), pour illustrer comment un modèle de séries temporelles capte tendance et
+    saisonnalité sans qu'on les lui décrive explicitement.
+  cas_usage:
+    enonce: "Prévoir les dépenses de soins remboursées des prochains mois à partir de l'historique."
+    exemples: []
+    idees_usage:
+    - "Anticiper les besoins de trésorerie d'une mutuelle selon la saisonnalité des dépenses."
+    - "Dimensionner une provision technique en fonction de la dépense prévisionnelle."
+    - "Détecter un écart significatif entre la dépense observée et la dépense prévue."
+    - "Présenter en comité de pilotage une projection de dépenses de soins pour les mois à venir."
+    - "Comparer la saisonnalité des dépenses entre plusieurs garanties (hospitalisation, pharmacie, dentaire)."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/amazon/chronos-bolt-tiny
+  mode_emploi: "pip install chronos-forecasting torch, puis BaseChronosPipeline.from_pretrained(\"amazon/chronos-bolt-tiny\", device_map=\"cpu\")."
+- id: tesseract-ocr-feuille-soins
+  nom: Tesseract OCR — feuille de soins
+  famille: ocr
+  secteur: Assurance santé — remboursement
+  moteur: tesseract
+  moteur_ref: tesseract-ocr (moteur classique, pas un LLM)
+  taille: moteur classique, pas un réseau de neurones
+  description_pedagogique: >-
+    Même moteur OCR classique que celui du catalogue général, appliqué ici à une feuille de
+    soins générée à la volée — la première étape avant tout remboursement automatisé : transformer
+    un document scanné en texte exploitable par le système de gestion.
+  cas_usage:
+    enonce: "Extraire le texte d'une feuille de soins scannée."
+    exemples: []
+    idees_usage:
+    - "Extraire automatiquement le montant remboursable d'une feuille de soins pour accélérer le paiement."
+    - "Vérifier la cohérence entre le montant transmis et le montant attendu selon les garanties."
+    - "Archiver les feuilles de soins sous forme de texte recherchable plutôt que d'images figées."
+    - "Détecter les documents dont le texte extrait est incohérent, signe d'une pièce à vérifier manuellement."
+    - "Alimenter automatiquement un dossier de remboursement à partir des pièces transmises par l'adhérent."
+  statut: disponible
+  lien_telechargement: https://github.com/tesseract-ocr/tesseract
+  mode_emploi: "Installez le paquet système (apt install tesseract-ocr tesseract-ocr-fra), puis pip install pytesseract Pillow et appelez pytesseract.image_to_string(image, lang=\"fra\")."
+- id: nomic-embeddings-garanties-sante
+  nom: Nomic Embed Text — comparaison de garanties santé
+  famille: embeddings
+  secteur: Assurance santé — recherche sémantique dans les garanties
+  moteur: ollama
+  moteur_ref: nomic-embed-text
+  taille: 137 millions de paramètres
+  description_pedagogique: >-
+    Même modèle d'embeddings que celui du catalogue général, mobilisé ici pour comparer le sens
+    de deux formulations de garanties santé — utile pour repérer des garanties redondantes entre
+    deux contrats, ou faire correspondre la demande en langage courant d'un adhérent à la bonne
+    clause contractuelle, même si les mots utilisés diffèrent.
+  cas_usage:
+    enonce: "Comparer le sens de deux formulations de garanties santé, même si les mots diffèrent."
+    exemples:
+    - label: "Garanties équivalentes"
+      input: "Phrase A: Les frais d'optique sont pris en charge dans la limite de 200 euros tous les deux ans. Phrase B: Le remboursement des lunettes est plafonné à 200 euros par période de 24 mois."
+    - label: "Garanties différentes"
+      input: "Phrase A: Les frais d'optique sont pris en charge dans la limite de 200 euros tous les deux ans. Phrase B: Les consultations chez un spécialiste sont remboursées à hauteur de 70%."
+    idees_usage:
+    - "Repérer les garanties redondantes ou en doublon entre deux contrats d'un même adhérent."
+    - "Faire correspondre la question d'un adhérent en langage courant à la bonne clause contractuelle."
+    - "Comparer automatiquement les garanties de plusieurs offres de mutuelle pour un comparateur."
+    - "Détecter les incohérences de formulation entre différentes versions d'un même contrat."
+    - "Alimenter un moteur de recherche sémantique sur une base documentaire de garanties santé."
+  statut: disponible
+  lien_telechargement: https://ollama.com/library/nomic-embed-text
+  mode_emploi: "Nécessite un serveur Ollama local avec le modèle téléchargé (ollama pull nomic-embed-text), puis un appel à l'API d'embeddings d'Ollama."
+- id: sd-turbo-generation-image
+  nom: SD-Turbo — génération d'image
+  famille: generation_image
+  secteur: Création de contenu visuel
+  moteur: diffusers
+  moteur_ref: stabilityai/sd-turbo
+  taille: 0,9 milliard de paramètres (~3,4 Go)
+  description_pedagogique: >-
+    Contrairement à tous les autres modèles du catalogue, qui COMPRENNENT du contenu existant
+    (classer, extraire, transcrire...), celui-ci en GÉNÈRE de nouveau à partir d'une simple
+    description en texte. Un Stable Diffusion classique a besoin d'une cinquantaine d'étapes de
+    débruitage pour produire une image, ce qui le rend beaucoup trop lent sur CPU pour une démo
+    interactive (plusieurs minutes). SD-Turbo est distillé pour ne nécessiter qu'UNE seule étape
+    — le compromis qui rend la génération d'image possible ici en quelques secondes, au prix d'un
+    rendu moins raffiné qu'un modèle complet sur GPU. C'est aussi, de loin, le modèle le plus
+    lourd du catalogue (~3,4 Go) : une exception assumée à la règle des modèles légers, parce que
+    la génération d'image n'a pas d'équivalent réellement plus petit et fiable.
+  cas_usage:
+    enonce: "Générer une image à partir d'une description en texte."
+    exemples:
+    - label: "Paysage"
+      input: "Un phare sur une falaise face à l'océan au coucher du soleil, style peinture à l'huile."
+    - label: "Objet"
+      input: "Une tasse de café fumante posée sur un bureau en bois, lumière du matin."
+    - label: "Scène urbaine"
+      input: "Une rue pavée européenne sous la pluie, la nuit, avec des reflets de néons colorés."
+    idees_usage:
+    - "Générer un premier visuel d'illustration pour un article de blog, à affiner ensuite."
+    - "Explorer rapidement plusieurs pistes visuelles pour un moodboard créatif."
+    - "Créer une image de fond personnalisée pour une présentation, sans banque d'images payante."
+    - "Prototyper visuellement un concept avant de le confier à un illustrateur professionnel."
+    - "Illustrer un module pédagogique par une image générée plutôt qu'une photo de stock générique."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/stabilityai/sd-turbo
+  mode_emploi: "pip install diffusers torch, puis AutoPipelineForText2Image.from_pretrained(\"stabilityai/sd-turbo\") et appeler pipe(prompt=texte, num_inference_steps=1, guidance_scale=0.0)."
+- id: roberta-detection-texte-ia
+  nom: RoBERTa — détecteur de texte généré par IA (GPT-2)
+  famille: detection_contenu_ia
+  secteur: Vérification de contenu / esprit critique
+  moteur: transformers
+  moteur_ref: openai-community/roberta-base-openai-detector
+  taille: 125 millions de paramètres
+  description_pedagogique: >-
+    Le détecteur officiel publié par OpenAI en 2019 pour repérer les textes générés par GPT-2 —
+    l'un des tout premiers modèles de ce type. Utile pour illustrer concrètement l'idée, déjà
+    posée sur la page d'accueil de ce site, que garder un esprit critique face à un texte suppose
+    de pouvoir en interroger l'origine. Limite importante à connaître : entraîné sur GPT-2
+    (2019), sa fiabilité sur les textes des modèles actuels (bien plus sophistiqués) n'est pas
+    garantie — un score de détection n'est jamais une preuve, seulement un indice.
+  cas_usage:
+    enonce: "Estimer si un texte a des chances d'avoir été généré par une IA plutôt qu'écrit par un humain."
+    exemples:
+    - label: "Texte probablement humain"
+      input: "Honestly I forgot to buy milk again this morning, third time this week, I really need to write a list."
+    - label: "Texte à la structure très régulière"
+      input: "In conclusion, artificial intelligence offers numerous benefits across various industries, including healthcare, finance, and education, while also presenting certain challenges that must be carefully addressed."
+    idees_usage:
+    - "Donner un premier indice avant une vérification humaine plus approfondie, jamais une décision automatique seule."
+    - "Sensibiliser en formation aux limites réelles de la détection de texte généré par IA."
+    - "Comparer le score de plusieurs textes pour repérer ceux qui méritent une relecture attentive."
+    - "Illustrer concrètement pourquoi la vigilance humaine reste nécessaire face à un contenu écrit."
+    - "Servir de point de départ pédagogique avant de tester un détecteur plus récent sur les mêmes textes."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/openai-community/roberta-base-openai-detector
+  mode_emploi: "pip install transformers torch, puis pipeline(\"text-classification\", model=\"openai-community/roberta-base-openai-detector\")."
+- id: chatgpt-detector-roberta
+  nom: RoBERTa — détecteur de texte ChatGPT
+  famille: detection_contenu_ia
+  secteur: Vérification de contenu / esprit critique
+  moteur: transformers
+  moteur_ref: Hello-SimpleAI/chatgpt-detector-roberta
+  taille: 125 millions de paramètres
+  description_pedagogique: >-
+    Même principe que le détecteur GPT-2 du catalogue, mais entraîné spécifiquement sur des
+    paires de réponses humaines et ChatGPT (jeu de données HC3) — plus pertinent pour les
+    contenus conversationnels actuels. Comme pour l'autre détecteur, un score n'est jamais une
+    preuve définitive : c'est un indice à interpréter, pas un verdict.
+  cas_usage:
+    enonce: "Estimer si une réponse a des chances de provenir d'un assistant conversationnel plutôt que d'un humain."
+    exemples:
+    - label: "Réponse au style humain"
+      input: "Honestly not sure, I'd have to check my notes from last week, can I get back to you tomorrow?"
+    - label: "Réponse au style structuré"
+      input: "There are several factors to consider. First, the cost implications. Second, the timeline. Third, the potential risks involved in this approach."
+    idees_usage:
+    - "Donner un premier indice avant une vérification humaine, jamais une décision automatique seule."
+    - "Comparer les scores de plusieurs réponses reçues dans un cadre scolaire ou professionnel."
+    - "Sensibiliser en formation aux limites réelles de la détection de texte généré par IA."
+    - "Illustrer la différence de style entre un texte spontané et un texte structuré par une IA."
+    - "Servir de support pédagogique pour discuter des usages responsables de l'IA générative."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/Hello-SimpleAI/chatgpt-detector-roberta
+  mode_emploi: "pip install transformers torch, puis pipeline(\"text-classification\", model=\"Hello-SimpleAI/chatgpt-detector-roberta\")."
+- id: sdxl-detector-image-ia
+  nom: Détecteur d'images générées (Stable Diffusion / SDXL)
+  famille: detection_contenu_ia
+  secteur: Vérification de contenu / esprit critique
+  moteur: transformers
+  moteur_ref: Organika/sdxl-detector
+  taille: 87 millions de paramètres
+  description_pedagogique: >-
+    L'équivalent visuel des détecteurs de texte du catalogue : ce modèle a appris à repérer les
+    artefacts subtils que laissent les générateurs d'images par diffusion (Stable Diffusion,
+    SDXL) sur une photo. Comme pour le texte, un score de détection n'est jamais une certitude —
+    ce modèle n'a par ailleurs jamais vu les générateurs les plus récents, sa fiabilité décline
+    avec le temps si le modèle n'est pas mis à jour, un vrai enjeu de maintenance pour ce type
+    d'outil.
+  cas_usage:
+    enonce: "Estimer si une image d'exemple a des chances d'être une photo réelle ou générée par IA."
+    exemples: []
+    idees_usage:
+    - "Donner un premier indice de vérification avant publication d'une image sur un média ou un réseau social."
+    - "Sensibiliser en formation aux limites réelles de la détection d'images générées."
+    - "Servir de filtre de premier niveau dans un flux de modération de contenu visuel."
+    - "Illustrer concrètement pourquoi une image seule ne suffit plus comme preuve."
+    - "Comparer le comportement de ce détecteur sur une vraie photo et sur une image générée pour en tester les limites."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/Organika/sdxl-detector
+  mode_emploi: "pip install transformers torch Pillow, puis pipeline(\"image-classification\", model=\"Organika/sdxl-detector\")."
+- id: deepfake-detector-visage
+  nom: Détecteur de visages générés (deepfake)
+  famille: detection_contenu_ia
+  secteur: Vérification de contenu / esprit critique
+  moteur: transformers
+  moteur_ref: prithivMLmods/deepfake-detector-model-v1
+  taille: 93 millions de paramètres
+  description_pedagogique: >-
+    Variante du détecteur d'images précédent, spécialisée cette fois sur les visages générés ou
+    manipulés par IA (deepfakes) plutôt que sur les images générées par diffusion en général —
+    une distinction importante : ce ne sont pas les mêmes artefacts techniques qui trahissent
+    l'un ou l'autre. Précision annoncée de 94% sur son propre jeu de test, un chiffre à prendre
+    avec prudence face à des contenus réels très variés.
+  cas_usage:
+    enonce: "Estimer si un visage sur une image d'exemple a des chances d'être réel ou généré/manipulé par IA."
+    exemples: []
+    idees_usage:
+    - "Donner un premier indice de vérification avant de traiter une photo d'identité comme authentique."
+    - "Sensibiliser en formation aux enjeux des deepfakes et à leurs limites de détection."
+    - "Servir de filtre de premier niveau avant une vérification humaine approfondie, jamais une décision seule."
+    - "Illustrer la distinction technique entre détection d'image générée en général et détection de deepfake facial."
+    - "Alimenter une réflexion sur la fiabilité décroissante de ce type d'outil face à des générateurs toujours plus réalistes."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/prithivMLmods/deepfake-detector-model-v1
+  mode_emploi: "pip install transformers torch Pillow, puis pipeline(\"image-classification\", model=\"prithivMLmods/deepfake-detector-model-v1\")."
+- id: trocr-ocr-manuscrit
+  nom: TrOCR — reconnaissance d'écriture manuscrite
+  famille: ocr
+  secteur: Archivage / numérisation de documents manuscrits
+  moteur: transformers
+  moteur_ref: microsoft/trocr-small-handwritten
+  taille: 62 millions de paramètres
+  description_pedagogique: >-
+    Contrairement à Tesseract (moteur classique conçu pour le texte imprimé, déjà présent dans
+    le catalogue), TrOCR est un vrai transformer encodeur-décodeur, entraîné spécifiquement sur
+    de l'écriture manuscrite — un problème nettement plus difficile car chaque main écrit
+    différemment. L'exemple ci-dessous est une vraie ligne scannée de la base IAM Handwriting
+    Database (anglais — aucun modèle léger fiable équivalent n'existe en français à ce jour).
+  cas_usage:
+    enonce: "Retranscrire une ligne d'écriture manuscrite scannée."
+    exemples: []
+    idees_usage:
+    - "Numériser des archives manuscrites (courriers, registres) en texte recherchable."
+    - "Retranscrire des notes prises à la main lors d'une réunion ou d'un cours."
+    - "Extraire le texte de formulaires papier remplis à la main avant saisie informatique."
+    - "Comparer la fiabilité de TrOCR (manuscrit) et Tesseract (imprimé) sur un même type de document mixte."
+    - "Faciliter l'archivage de correspondances manuscrites anciennes pour un projet de recherche historique."
+  statut: disponible
+  lien_telechargement: https://huggingface.co/microsoft/trocr-small-handwritten
+  mode_emploi: "pip install transformers torch Pillow, puis TrOCRProcessor.from_pretrained(\"microsoft/trocr-small-handwritten\") + VisionEncoderDecoderModel.from_pretrained(\"microsoft/trocr-small-handwritten\")."

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { essayerModele } from '../api/client'
+import { ajouterEntreeParcours, basculerFavori, estFavori } from '../stockageLocal'
 import ResultRenderer from './ResultRenderer'
 
 type Props = {
   modele: any
   onFermer: () => void
 }
+
+const IDX_LIBRE = -1
 
 export default function ModelDetailDrawer({ modele, onFermer }: Props) {
   const exemples: { label: string; input: string }[] = modele.cas_usage.exemples || []
@@ -14,10 +17,12 @@ export default function ModelDetailDrawer({ modele, onFermer }: Props) {
   const [resultat, setResultat] = useState<any>(null)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
+  const [favori, setFavori] = useState(() => estFavori('modele', modele.id))
 
   function choisirExemple(idx: number) {
     setExempleIdx(idx)
-    setInput(exemples[idx]?.input || '')
+    setInput(idx === IDX_LIBRE ? '' : exemples[idx]?.input || '')
+    setResultat(null)
   }
 
   async function essayer() {
@@ -27,6 +32,12 @@ export default function ModelDetailDrawer({ modele, onFermer }: Props) {
     try {
       const r = await essayerModele(modele.id, input)
       setResultat(r)
+      ajouterEntreeParcours({
+        type: 'modele',
+        id: modele.id,
+        titre: modele.nom,
+        detail: exempleIdx === IDX_LIBRE ? 'Bac à sable' : exemples[exempleIdx]?.label,
+      })
     } catch (e: any) {
       setErreur(e.message)
     } finally {
@@ -40,7 +51,17 @@ export default function ModelDetailDrawer({ modele, onFermer }: Props) {
     <div className="drawer-overlay" onClick={onFermer}>
       <div className="drawer" onClick={(e) => e.stopPropagation()}>
         <button className="drawer-close" onClick={onFermer} aria-label="Fermer">×</button>
-        <h2>{modele.nom}</h2>
+        <div className="drawer-titre-ligne">
+          <h2>{modele.nom}</h2>
+          <span
+            className={favori ? 'favori-etoile actif' : 'favori-etoile'}
+            role="button"
+            aria-label={favori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            onClick={() => setFavori(basculerFavori('modele', modele.id))}
+          >
+            {favori ? '★' : '☆'}
+          </span>
+        </div>
         <p className="drawer-meta">
           {modele.famille.replace(/_/g, ' ')} · {modele.secteur} · {modele.taille}
         </p>
@@ -72,8 +93,19 @@ export default function ModelDetailDrawer({ modele, onFermer }: Props) {
                   {ex.label}
                 </button>
               ))}
+              <button
+                className={exempleIdx === IDX_LIBRE ? 'chip actif' : 'chip'}
+                onClick={() => choisirExemple(IDX_LIBRE)}
+              >
+                ✏️ Mon propre texte
+              </button>
             </div>
-            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={8} />
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              rows={8}
+              placeholder={exempleIdx === IDX_LIBRE ? 'Écris ton propre texte à tester ici…' : undefined}
+            />
           </>
         )}
 

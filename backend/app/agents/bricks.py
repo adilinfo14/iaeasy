@@ -284,7 +284,15 @@ BRIQUES = [
                     "recherche documentaire) exposé via le protocole MCP (Model Context Protocol), "
                     "plutôt que de tout deviner par lui-même."
                 ),
-                "entree_defaut": {"outil": "calculatrice", "expression": "45 * 3.5 + 45 * 2.25"},
+                "entree_defaut": {
+                    "outil": "calculatrice",
+                    "expression": "45 * 3.5 + 45 * 2.25",
+                    "requete": "Qu'est-ce que le protocole MCP ?",
+                },
+                "exemples": [
+                    {"label": "Coût main d'œuvre + matériaux", "outil": "calculatrice", "expression": "8 * 38 + 340"},
+                    {"label": "Qu'est-ce qu'un agent unique ?", "outil": "recherche", "requete": "Qu'est-ce qu'un agent unique ?"},
+                ],
             },
             {
                 "id": "banque_assurance",
@@ -300,7 +308,15 @@ BRIQUES = [
                     "recherche documentaire) exposé via le protocole MCP, plutôt que de tout "
                     "deviner par lui-même."
                 ),
-                "entree_defaut": {"outil": "calculatrice", "expression": "12000 + (12000 * 0.045 * 3)"},
+                "entree_defaut": {
+                    "outil": "calculatrice",
+                    "expression": "12000 + (12000 * 0.045 * 3)",
+                    "requete": "Comment fonctionne une boucle ReAct ?",
+                },
+                "exemples": [
+                    {"label": "Mensualité + frais de dossier", "outil": "calculatrice", "expression": "15000 / 60 + 45"},
+                    {"label": "Comment fonctionne le multi-agent ?", "outil": "recherche", "requete": "Comment fonctionne un pipeline multi-agent ?"},
+                ],
             },
             {
                 "id": "agriculture",
@@ -316,7 +332,15 @@ BRIQUES = [
                     "recherche documentaire) exposé via le protocole MCP, plutôt que de tout "
                     "deviner par lui-même."
                 ),
-                "entree_defaut": {"outil": "calculatrice", "expression": "68000 / 12"},
+                "entree_defaut": {
+                    "outil": "calculatrice",
+                    "expression": "68000 / 12",
+                    "requete": "Comment un modèle de détection d'anomalie s'entraîne-t-il ?",
+                },
+                "exemples": [
+                    {"label": "Coût de traitement à l'hectare", "outil": "calculatrice", "expression": "22 * 65"},
+                    {"label": "Qu'est-ce qu'un embedding ?", "outil": "recherche", "requete": "Qu'est-ce qu'un embedding ?"},
+                ],
             },
             {
                 "id": "rh_juridique",
@@ -332,7 +356,15 @@ BRIQUES = [
                     "recherche documentaire) exposé via le protocole MCP, plutôt que de tout "
                     "deviner par lui-même."
                 ),
-                "entree_defaut": {"outil": "calculatrice", "expression": "3200 * 0.25 * 8"},
+                "entree_defaut": {
+                    "outil": "calculatrice",
+                    "expression": "3200 * 0.25 * 8",
+                    "requete": "Qu'est-ce qu'un système multi-agent ?",
+                },
+                "exemples": [
+                    {"label": "Total des primes trimestrielles", "outil": "calculatrice", "expression": "4 * 250"},
+                    {"label": "Comment fonctionne le RAG ?", "outil": "recherche", "requete": "Comment fonctionne la recherche documentaire RAG ?"},
+                ],
             },
             {
                 "id": "ecommerce",
@@ -348,7 +380,15 @@ BRIQUES = [
                     "recherche documentaire) exposé via le protocole MCP, plutôt que de tout "
                     "deviner par lui-même."
                 ),
-                "entree_defaut": {"outil": "calculatrice", "expression": "129.99 - (129.99 * 0.15)"},
+                "entree_defaut": {
+                    "outil": "calculatrice",
+                    "expression": "129.99 - (129.99 * 0.15)",
+                    "requete": "Qu'est-ce que le RAG ?",
+                },
+                "exemples": [
+                    {"label": "Total panier + livraison", "outil": "calculatrice", "expression": "3 * 24.90 + 5.90"},
+                    {"label": "Qu'est-ce qu'un outil MCP ?", "outil": "recherche", "requete": "Qu'est-ce qu'un outil MCP ?"},
+                ],
             },
         ],
         "quiz": [
@@ -405,6 +445,12 @@ BRIQUES = [
                     "C'est le principe de la boucle ReAct (Reason + Act)."
                 ),
                 "entree_defaut": {"prompt": "Combien font 15 fois (2 + 6) ?"},
+                "exemples": [
+                    {
+                        "label": "Coût de main d'œuvre sur un chantier",
+                        "prompt": "Un chantier dure 12 jours à raison de 7h par jour à 42€/h : quel est le coût total de main d'œuvre ?",
+                    }
+                ],
             },
             {
                 "id": "banque_assurance",
@@ -421,6 +467,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Un client veut emprunter 20 000€ sur 5 ans à un taux fixe de 3,8% (intérêts simples) : peux-tu lui dire combien ce crédit lui coûtera au total ?"
                 },
+                "exemples": [
+                    {
+                        "label": "Placement à intérêt simple",
+                        "prompt": "Un client place 8000€ à 2,5% d'intérêt simple pendant 4 ans : combien aura-t-il à l'échéance ?",
+                    }
+                ],
             },
             {
                 "id": "agriculture",
@@ -437,6 +489,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "J'ai récolté 92 tonnes de maïs sur 14 hectares, peux-tu me dire mon rendement moyen à l'hectare et me dire si c'est au-dessus de la moyenne régionale de 8 tonnes/ha ?"
                 },
+                "exemples": [
+                    {
+                        "label": "Prix de vente vs référence",
+                        "prompt": "J'ai vendu 45 tonnes de blé à 220€/tonne, peux-tu me dire le montant total et si c'est au-dessus d'un prix de référence de 200€/tonne ?",
+                    }
+                ],
             },
             {
                 "id": "rh_juridique",
@@ -453,6 +511,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Un salarié a 6 ans d'ancienneté et un salaire brut mensuel de 2800 euros, il est licencié : combien va-t-il toucher d'indemnité légale ?"
                 },
+                "exemples": [
+                    {
+                        "label": "Jours de RTT restants",
+                        "prompt": "Un salarié a pris 18 jours de RTT sur les 25 auxquels il a droit cette année, combien lui en reste-t-il ?",
+                    }
+                ],
             },
             {
                 "id": "ecommerce",
@@ -470,6 +534,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Un client a commandé pour 156 euros et a un code promo de 20%. Calcule combien il doit payer au final."
                 },
+                "exemples": [
+                    {
+                        "label": "Montant final après remise",
+                        "prompt": "Un client a acheté pour 340€ avec une remise de 12%, combien va-t-il payer au final ?",
+                    }
+                ],
             },
         ],
         "quiz": [
@@ -526,6 +596,12 @@ BRIQUES = [
                     "professionnelle. Chacun a un rôle et un prompt différent."
                 ),
                 "entree_defaut": {"prompt": "Rédige un message pour expliquer à un client ce qu'est un agent IA."},
+                "exemples": [
+                    {
+                        "label": "Annonce de report de chantier",
+                        "prompt": "Rédige un message pour annoncer à un client un report de chantier de 5 jours pour cause d'intempéries.",
+                    }
+                ],
             },
             {
                 "id": "banque_assurance",
@@ -544,6 +620,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Rédige un email pour informer un client que son dossier de sinistre dégât des eaux a été validé et que l'indemnisation de 3 200€ (franchise déjà déduite) sera versée sous 10 jours ouvrés."
                 },
+                "exemples": [
+                    {
+                        "label": "Relance dossier de prêt incomplet",
+                        "prompt": "Rédige un email pour relancer un client dont le dossier de prêt est incomplet depuis 2 semaines.",
+                    }
+                ],
             },
             {
                 "id": "agriculture",
@@ -562,6 +644,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Rédige un message clair pour informer les adhérents bio de la coopérative des conditions et de la date limite de dépôt du dossier d'aide au maintien en agriculture biologique."
                 },
+                "exemples": [
+                    {
+                        "label": "Changement de date de collecte",
+                        "prompt": "Rédige un message pour informer les adhérents d'un changement de date de collecte des céréales.",
+                    }
+                ],
             },
             {
                 "id": "rh_juridique",
@@ -580,6 +668,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Rédige un email à un candidat pour lui annoncer qu'il est convoqué à un entretien la semaine prochaine, en précisant les documents à apporter."
                 },
+                "exemples": [
+                    {
+                        "label": "Acceptation d'un congé parental",
+                        "prompt": "Rédige un email pour confirmer à un salarié l'acceptation de sa demande de congé parental.",
+                    }
+                ],
             },
             {
                 "id": "ecommerce",
@@ -598,6 +692,12 @@ BRIQUES = [
                 "entree_defaut": {
                     "prompt": "Rédige un email de réponse pour un client qui se plaint que sa commande n'est toujours pas arrivée après 10 jours."
                 },
+                "exemples": [
+                    {
+                        "label": "Remboursement d'une commande défectueuse",
+                        "prompt": "Rédige un email pour annoncer à un client le remboursement intégral de sa commande défectueuse.",
+                    }
+                ],
             },
         ],
         "quiz": [

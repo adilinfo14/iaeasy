@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -11,8 +12,15 @@ from .admin.router import router as admin_router
 from .agents.router import router as agents_router
 from .aide.router import router as aide_router
 from .avis.router import router as avis_router
+from .brief_ia.router import router as brief_ia_router
 from .catalogue.router import router as catalogue_router
+from .chasseur_mission.router import router as chasseur_mission_router
 from .glossaire.router import router as glossaire_router
+from .instagram import banque as instagram_banque
+from .instagram.router import demarrer_derniers_posts as instagram_demarrer_derniers_posts
+from .instagram.router import demarrer_instantanes_compte as instagram_demarrer_instantanes_compte
+from .instagram.router import demarrer_planificateur as instagram_demarrer_planificateur
+from .instagram.router import router as instagram_router
 from .metiers.router import router as metiers_router
 from .progress.router import router as progress_router
 from .securite.router import router as securite_router
@@ -23,6 +31,7 @@ from .theatre import voix as theatre_voix
 from .theatre.router import router as theatre_router
 from .training.router import router as training_router
 from .videos.router import router as videos_router
+from .voyage.router import router as voyage_router
 
 
 @asynccontextmanager
@@ -30,6 +39,20 @@ async def lifespan(_app: FastAPI):
     # Précharge les voix Piper au démarrage : sans ça, le premier visiteur après un déploiement
     # paierait le coût du téléchargement (~61 Mo/voix) au milieu de sa lecture du Théâtre.
     await asyncio.to_thread(theatre_voix.precharger_voix)
+    # Vérifie le ratio des images de la banque Instagram au démarrage plutôt que de laisser
+    # Instagram le découvrir au moment d'une vraie tentative de publication (déjà rencontré en
+    # conditions réelles : "The aspect ratio is not supported").
+    for probleme in await instagram_banque.verifier_ratios():
+        logging.getLogger("uvicorn.error").warning("[instagram] %s", probleme)
+    # Boucle de fond qui déclenche les posts Instagram programmés arrivés à échéance — tourne
+    # pendant toute la vie du processus, indépendamment des requêtes HTTP.
+    instagram_demarrer_planificateur()
+    # Capture un instantané (abonnés, portée, visites de profil) une fois par jour — construit la
+    # courbe de croissance sans dépendre du fait que quelqu'un ouvre le tableau de bord.
+    instagram_demarrer_instantanes_compte()
+    # Rafraîchit le cache des derniers posts (aperçu embarqué sur tkonsulting.fr) une fois par
+    # heure, sans dépendre d'une visite pour déclencher l'appel à l'API Graph.
+    instagram_demarrer_derniers_posts()
     yield
 
 
@@ -45,14 +68,18 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    # Le frontend est servi par ce même processus (même origine) : cette liste ne sert qu'à
-    # d'éventuels appels croisés explicites, jamais au fonctionnement normal du site.
-    allow_origins=["https://iaeasy.noschoixpourvous.com"],
+    # Le frontend iaeasy est servi par ce même processus (même origine, pas besoin de CORS pour
+    # lui) — tkonsulting.fr est un site statique séparé (hébergé sur un autre serveur IONOS) qui
+    # doit pouvoir appeler /api/instagram/derniers-posts en JS côté client pour son aperçu
+    # Instagram embarqué, d'où cette origine explicitement autorisée.
+    allow_origins=["https://iaeasy.noschoixpourvous.com", "https://tkonsulting.fr", "https://www.tkonsulting.fr"],
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
 
 app.include_router(catalogue_router, prefix="/api")
+app.include_router(chasseur_mission_router, prefix="/api")
+app.include_router(brief_ia_router, prefix="/api")
 app.include_router(training_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
 app.include_router(progress_router, prefix="/api")
@@ -67,6 +94,8 @@ app.include_router(videos_router, prefix="/api")
 app.include_router(securite_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(theatre_router, prefix="/api")
+app.include_router(voyage_router, prefix="/api")
+app.include_router(instagram_router, prefix="/api")
 
 
 @app.get("/api/health")

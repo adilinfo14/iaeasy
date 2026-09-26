@@ -9,6 +9,7 @@ import {
   validerBadge,
 } from '../api/client'
 import Quiz from '../components/Quiz'
+import { ajouterEntreeParcours } from '../stockageLocal'
 
 function casDeBrique(brique: any, casId: string) {
   return brique.cas?.find((c: any) => c.id === casId) || brique.cas?.[0]
@@ -30,7 +31,12 @@ export default function Parcours() {
     'La garantie décennale couvre les dommages de gros œuvre pendant 10 ans après réception des travaux.',
   )
   const [outilChoisi, setOutilChoisi] = useState<'calculatrice' | 'recherche'>('calculatrice')
+  // Deux champs distincts plutôt qu'un seul partagé : l'ancien champ unique gardait affichée (et
+  // envoyée) l'expression de calcul même après avoir basculé sur "Recherche documentaire" — un
+  // simple changement de placeholder ne remplace jamais une valeur déjà saisie (signalé en
+  // conditions réelles : "45 * 3.5 + 45 * 2.25" restait visible avec la recherche sélectionnée).
   const [expressionOutil, setExpressionOutil] = useState('45 * 3.5 + 45 * 2.25')
+  const [requeteOutil, setRequeteOutil] = useState("Qu'est-ce que le protocole MCP ?")
   const [tacheAgent, setTacheAgent] = useState('Combien font 15 fois (2 + 6) ?')
   const [tacheMultiAgent, setTacheMultiAgent] = useState(
     "Rédige un message pour expliquer à un client ce qu'est un agent IA.",
@@ -57,6 +63,7 @@ export default function Parcours() {
       if (b.id === 'outil_mcp') {
         setOutilChoisi('calculatrice')
         if (d.expression) setExpressionOutil(d.expression)
+        if (d.requete) setRequeteOutil(d.requete)
       }
       if (b.id === 'agent_unique' && d.prompt) setTacheAgent(d.prompt)
       if (b.id === 'multi_agent' && d.prompt) setTacheMultiAgent(d.prompt)
@@ -89,7 +96,7 @@ export default function Parcours() {
             {
               id: '1',
               type: 'outil_mcp',
-              config: { outil: outilChoisi, expression: expressionOutil, prompt: expressionOutil },
+              config: { outil: outilChoisi, expression: expressionOutil, requete: requeteOutil },
             },
           ],
           edges: [],
@@ -109,6 +116,12 @@ export default function Parcours() {
       const graphe = construireGraphe(brique)
       const resultat = await executerGraphe(graphe.nodes, graphe.edges)
       setResultats((r) => ({ ...r, [brique.id]: resultat }))
+      ajouterEntreeParcours({
+        type: 'brique',
+        id: brique.id,
+        titre: brique.titre,
+        detail: casDeBrique(brique, casChoisi)?.secteur,
+      })
       const suivante = nextBriqueId(briques, brique.id)
       const p = await debloquerBrique(suivante)
       setDebloquees(p.debloquees)
@@ -119,7 +132,7 @@ export default function Parcours() {
     }
   }
 
-  function renderEntree(brique: any) {
+  function renderEntree(brique: any, cas: any) {
     switch (brique.id) {
       case 'llm_seul':
         return (
@@ -149,7 +162,14 @@ export default function Parcours() {
             />
           </>
         )
-      case 'outil_mcp':
+      case 'outil_mcp': {
+        // Le premier chip reprend l'entrée par défaut du secteur, les suivants viennent de
+        // cas.exemples — filtrés selon le mode (calculatrice/recherche) actuellement choisi,
+        // chaque exemple porte son propre champ "outil" pour savoir où il s'applique.
+        const exemplesOutil = [
+          { label: 'Exemple par défaut', ...cas?.entree_defaut },
+          ...(cas?.exemples || []),
+        ].filter((ex) => ex.outil === outilChoisi)
         return (
           <>
             <div className="exemples-chips">
@@ -166,33 +186,85 @@ export default function Parcours() {
                 Recherche documentaire
               </button>
             </div>
+            {exemplesOutil.length > 0 && (
+              <div className="exemples-chips">
+                {exemplesOutil.map((ex, i) => (
+                  <button
+                    key={i}
+                    className="chip chip-exemple"
+                    onClick={() =>
+                      outilChoisi === 'calculatrice' ? setExpressionOutil(ex.expression) : setRequeteOutil(ex.requete)
+                    }
+                  >
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {outilChoisi === 'calculatrice' ? (
+              <textarea
+                className="input-texte"
+                rows={2}
+                value={expressionOutil}
+                onChange={(e) => setExpressionOutil(e.target.value)}
+                placeholder="Ex: 45 * 3.5"
+              />
+            ) : (
+              <textarea
+                className="input-texte"
+                rows={2}
+                value={requeteOutil}
+                onChange={(e) => setRequeteOutil(e.target.value)}
+                placeholder="Ex: Qu'est-ce que MCP ?"
+              />
+            )}
+          </>
+        )
+      }
+      case 'agent_unique': {
+        const exemplesAgent = [{ label: 'Exemple par défaut', prompt: cas?.entree_defaut?.prompt }, ...(cas?.exemples || [])]
+        return (
+          <>
+            {exemplesAgent.length > 1 && (
+              <div className="exemples-chips">
+                {exemplesAgent.map((ex, i) => (
+                  <button key={i} className="chip chip-exemple" onClick={() => setTacheAgent(ex.prompt)}>
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               className="input-texte"
               rows={2}
-              value={expressionOutil}
-              onChange={(e) => setExpressionOutil(e.target.value)}
-              placeholder={outilChoisi === 'calculatrice' ? 'Ex: 45 * 3.5' : 'Ex: Qu\'est-ce que MCP ?'}
+              value={tacheAgent}
+              onChange={(e) => setTacheAgent(e.target.value)}
             />
           </>
         )
-      case 'agent_unique':
+      }
+      case 'multi_agent': {
+        const exemplesMulti = [{ label: 'Exemple par défaut', prompt: cas?.entree_defaut?.prompt }, ...(cas?.exemples || [])]
         return (
-          <textarea
-            className="input-texte"
-            rows={2}
-            value={tacheAgent}
-            onChange={(e) => setTacheAgent(e.target.value)}
-          />
+          <>
+            {exemplesMulti.length > 1 && (
+              <div className="exemples-chips">
+                {exemplesMulti.map((ex, i) => (
+                  <button key={i} className="chip chip-exemple" onClick={() => setTacheMultiAgent(ex.prompt)}>
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <textarea
+              className="input-texte"
+              rows={2}
+              value={tacheMultiAgent}
+              onChange={(e) => setTacheMultiAgent(e.target.value)}
+            />
+          </>
         )
-      case 'multi_agent':
-        return (
-          <textarea
-            className="input-texte"
-            rows={2}
-            value={tacheMultiAgent}
-            onChange={(e) => setTacheMultiAgent(e.target.value)}
-          />
-        )
+      }
       default:
         return null
     }
@@ -266,7 +338,7 @@ export default function Parcours() {
 
               {prerequisOk ? (
                 <>
-                  {renderEntree(b)}
+                  {renderEntree(b, cas)}
                   <button onClick={() => essayerBrique(b)} disabled={enCours === b.id}>
                     {enCours === b.id ? 'Exécution…' : 'Essayer cette brique'}
                   </button>

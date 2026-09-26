@@ -10,10 +10,11 @@ class OllamaClient:
     def __init__(self, base_url: str | None = None):
         self.base_url = base_url or settings.ollama_url
 
-    async def generate(self, model: str, prompt: str, stream: bool = False) -> str:
+    async def generate(self, model: str, prompt: str, stream: bool = False, num_predict: int = 300) -> str:
         # num_predict borne la longueur de réponse : sur CPU pur, un modèle 7B sans limite
         # peut mettre plusieurs minutes à générer une réponse — inacceptable dans un outil
-        # pédagogique interactif.
+        # pédagogique interactif. Réglable au cas par cas (ex. un plan JSON de plusieurs slides
+        # dépasse largement les 300 tokens d'une légende courte).
         async with httpx.AsyncClient(timeout=280) as client:
             resp = await client.post(
                 f"{self.base_url}/api/generate",
@@ -21,7 +22,7 @@ class OllamaClient:
                     "model": model,
                     "prompt": prompt,
                     "stream": False,
-                    "options": {"num_predict": 300},
+                    "options": {"num_predict": num_predict},
                 },
             )
             resp.raise_for_status()

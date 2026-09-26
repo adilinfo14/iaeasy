@@ -40,15 +40,15 @@ const SOURCILS: Record<Emotion, { gauche: string; droit: string }> = {
 function boucheRepos(emotion: Emotion) {
   switch (emotion) {
     case 'joyeux':
-      return <path d="M 88 107 Q 100 117 112 107" stroke="#8f4a3a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      return <path d="M 88 107 Q 100 118 112 107" stroke="#c8564a" strokeWidth="3.5" fill="none" strokeLinecap="round" />
     case 'triste':
-      return <path d="M 88 114 Q 100 105 112 114" stroke="#8f4a3a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      return <path d="M 88 114 Q 100 104 112 114" stroke="#c8564a" strokeWidth="3.5" fill="none" strokeLinecap="round" />
     case 'surprise':
-      return <ellipse cx="100" cy="110" rx="5" ry="6" fill="#5a2018" />
+      return <ellipse cx="100" cy="110" rx="5.5" ry="6.5" fill="#8a2e1f" stroke="#c8564a" strokeWidth="1.5" />
     case 'inquiet':
-      return <path d="M 92 111 L 108 111" stroke="#8f4a3a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      return <path d="M 92 111 L 108 111" stroke="#c8564a" strokeWidth="3.5" fill="none" strokeLinecap="round" />
     default:
-      return <path d="M 91 110 Q 100 113 109 110" stroke="#8f4a3a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      return <path d="M 91 110 Q 100 113 109 110" stroke="#c8564a" strokeWidth="3.5" fill="none" strokeLinecap="round" />
   }
 }
 
@@ -129,8 +129,10 @@ export default function Personnage({ type, parle, actif, decor, variante, emotio
 
         {!estClio && (
           <>
-            {/* Barbe de Marco */}
-            <path d="M 74 108 Q 100 138 126 108 Q 100 122 74 108 Z" fill="#6b6b6b" />
+            {/* Barbe de Marco — en gris plat (#6b6b6b) à l'origine : comme elle encadre
+                directement la bouche, c'est elle (pas la bouche) qui était vue et signalée à
+                répétition comme "la bouche grise" en conditions réelles. Teinte châtain chaude. */}
+            <path d="M 74 108 Q 100 138 126 108 Q 100 122 74 108 Z" fill="#6b5540" />
           </>
         )}
 
@@ -148,10 +150,10 @@ export default function Personnage({ type, parle, actif, decor, variante, emotio
             déplace", pas comme une bouche qui articule. */}
         {parle ? (
           <g className="personnage-bouche-groupe">
-            <path className="bouche-cadre bouche-fermee" d="M 91 110 Q 100 113 109 110" stroke="#5a2e1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-            <ellipse className="bouche-cadre bouche-mi-ouverte" cx="100" cy="110" rx="6" ry="5" fill="#5a2018" />
+            <path className="bouche-cadre bouche-fermee" d="M 91 110 Q 100 113 109 110" stroke="#c8564a" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+            <ellipse className="bouche-cadre bouche-mi-ouverte" cx="100" cy="110" rx="6" ry="5" fill="#9c3a2a" />
             <g className="bouche-cadre bouche-grande-ouverte">
-              <ellipse cx="100" cy="111" rx="9" ry="8" fill="#3a1610" />
+              <ellipse cx="100" cy="111" rx="9" ry="8" fill="#7a2418" />
               <rect x="93" y="104" width="14" height="3" fill="#fff" opacity="0.85" rx="1" />
             </g>
           </g>

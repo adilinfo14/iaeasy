@@ -114,7 +114,7 @@ METIERS = [
                 "titre": "Résumer un long rapport ou contrat",
                 "description": "Un document trop long pour être lu en entier est découpé, résumé morceau par morceau, puis synthétisé en un seul paragraphe cohérent.",
                 "page": "/constructeur",
-                "texte_lien": "Voir le template « Résumé hiérarchique » →",
+                "texte_lien": "Voir le template « Résumé hiérarchique (map-reduce) » →",
             },
             {
                 "titre": "Retrouver une réponse exacte dans un document",
@@ -141,7 +141,7 @@ METIERS = [
                 "titre": "Rédiger une offre d'emploi ou des questions d'entretien",
                 "description": "Deux agents collaborent : l'un rassemble les critères du poste, l'autre rédige le texte final.",
                 "page": "/constructeur",
-                "texte_lien": "Voir le template « Assistant recrutement » →",
+                "texte_lien": "Voir le template « Assistant recrutement (sourcing + rédaction) » →",
             },
             {
                 "titre": "Répondre aux questions des nouveaux salariés",
@@ -168,7 +168,7 @@ METIERS = [
                 "titre": "Préparer un appel grâce à l'historique client",
                 "description": "Un agent consulte l'historique disponible avant de préparer un argumentaire de relance personnalisé.",
                 "page": "/constructeur",
-                "texte_lien": "Voir le template « Assistant commercial (CRM) » →",
+                "texte_lien": "Voir le template « Assistant commercial (consultation CRM) » →",
             },
             {
                 "titre": "Détecter la langue d'un message client international",
@@ -259,7 +259,7 @@ METIERS = [
                 "titre": "Résumer un dossier long avant une réunion de synthèse",
                 "description": "Un dossier trop long pour être relu en entier est découpé, résumé morceau par morceau, puis synthétisé en un seul paragraphe cohérent.",
                 "page": "/constructeur",
-                "texte_lien": "Voir le template « Résumé hiérarchique » →",
+                "texte_lien": "Voir le template « Résumé hiérarchique (map-reduce) » →",
             },
             {
                 "titre": "Répondre aux questions fréquentes sur les aides et démarches",
@@ -295,7 +295,7 @@ METIERS = [
                 "titre": "Résumer un support de cours trop long",
                 "description": "Un document découpé en morceaux, résumé partie par partie, puis synthétisé — utile pour préparer une fiche de révision condensée.",
                 "page": "/constructeur",
-                "texte_lien": "Voir le template « Résumé hiérarchique » →",
+                "texte_lien": "Voir le template « Résumé hiérarchique (map-reduce) » →",
             },
             {
                 "titre": "Traduire un support pour un élève allophone",
@@ -483,6 +483,40 @@ METIERS = [
                 "description": "Un modèle génératif reformule un texte juridique ou technique en langage courant, à vérifier avant de le transmettre tel quel.",
                 "page": "/constructeur",
                 "texte_lien": "Voir le template « LLM seul (référence) » →",
+            },
+        ],
+    },
+    {
+        "id": "associations",
+        "titre": "Association / ONG",
+        "secteur": "Associations / ONG",
+        "icone": "🤝",
+        "description": (
+            "Petite équipe, souvent bénévole, moyens limités : l'IA absorbe ici les tâches "
+            "chronophages (traduire, résumer, répondre) pour laisser plus de temps à l'action de "
+            "terrain elle-même."
+        ),
+        "cas_usage": [
+            {
+                "titre": "Traduire l'accueil de bénéficiaires non francophones",
+                "description": "Un modèle de traduction dédié à une seule paire de langues tourne localement, sans envoyer de données personnelles à un service tiers.",
+                "page": "/catalogue",
+                "texte_lien": "Voir Helsinki-NLP OPUS-MT (traduction) dans le Catalogue →",
+            },
+            {
+                "titre": "Résumer des dizaines de témoignages ou rapports de terrain",
+                "description": "Un modèle de résumé condense un long rapport en quelques phrases, pour préparer un compte-rendu à un financeur ou un conseil d'administration.",
+                "page": "/catalogue",
+                "texte_lien": "Voir BARThez (résumé) dans le Catalogue →",
+            },
+            {
+                "titre": "Répondre aux questions des bénéficiaires ou donateurs, 24h/24",
+                "description": (
+                    "Un assistant qui va chercher la réponse dans vos vrais documents (statuts, "
+                    "conditions d'adhésion, FAQ donateurs) plutôt que d'inventer une réponse approximative."
+                ),
+                "page": "/constructeur",
+                "texte_lien": "Voir le template « Assistant RAG documentaire » →",
             },
         ],
     },

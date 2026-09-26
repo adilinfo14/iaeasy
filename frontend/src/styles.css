@@ -70,7 +70,10 @@ p {
 /* --- Thème "doux" : crème / marron, plus chaleureux et invitant --- */
 :root[data-theme='doux'] {
   --bg: #f7efe1;
-  --bg-alt: #eee0c9;
+  /* Nettement plus clair que la version précédente (#eee0c9) : les cartes doivent se détacher
+     du fond crème plutôt que se fondre dedans — signalé en conditions réelles ("du blanc ne
+     serait pas mieux ?"). Reste teinté (pas blanc pur) pour ne pas perdre l'identité "café". */
+  --bg-alt: #fbf6ea;
   --fg: #4a3324;
   --fg-muted: #8a7360;
   --accent: #b06a35;
@@ -440,6 +443,7 @@ button:disabled {
   text-align: left;
   background: var(--bg-alt);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -448,6 +452,15 @@ button:disabled {
   color: var(--fg);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
+
+/* Accent de haut de carte par famille (voir teinteFamille() dans ModelCard.tsx) — casse le
+   monochrome d'une grille de ~28 cartes autrement identiques, sans devoir maintenir une table de
+   correspondance famille → couleur à jour à chaque modèle ajouté. */
+.model-card-teinte-source { border-top-color: var(--cat-source); }
+.model-card-teinte-traitement { border-top-color: var(--cat-traitement); }
+.model-card-teinte-stockage { border-top-color: var(--cat-stockage); }
+.model-card-teinte-modele { border-top-color: var(--cat-modele); }
+.model-card-teinte-outil { border-top-color: var(--cat-outil); }
 
 .model-card:hover {
   transform: translateY(-3px);
@@ -463,11 +476,18 @@ button:disabled {
 }
 
 .model-card-famille {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--accent);
 }
+
+.model-card-famille-source { color: var(--cat-source); }
+.model-card-famille-traitement { color: var(--cat-traitement); }
+.model-card-famille-stockage { color: var(--cat-stockage); }
+.model-card-famille-modele { color: var(--cat-modele); }
+.model-card-famille-outil { color: var(--cat-outil); }
 
 .model-card h3 {
   margin: 0.1rem 0;
@@ -1081,7 +1101,87 @@ button:disabled {
 
 /* --- Page d'accueil --- */
 .page-accueil {
-  max-width: 900px;
+  max-width: 980px;
+}
+
+/* Bandeau d'ouverture avec une vraie hiérarchie (eyebrow / titre large / chapô resserré) plutôt
+   qu'un simple h1 + paragraphe à plat — la grappe de grains de café devient un vrai flourish en
+   coin plutôt qu'une rangée discrète sous le titre. */
+.accueil-hero {
+  position: relative;
+  padding: 0.4rem 0 1.8rem;
+}
+
+.accueil-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.9rem;
+}
+
+.accueil-eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.accueil-titre {
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.1rem;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+
+.accueil-intro {
+  max-width: 62ch;
+  font-size: 1.02rem;
+}
+
+.accueil-hero-grain {
+  position: absolute;
+  top: 0.6rem;
+  right: 0;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.accueil-hero-grain svg {
+  width: 26px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .accueil-hero-grain {
+    display: none;
+  }
+}
+
+/* Ancienne grappe (3 petits grains sous le titre) conservée pour d'autres usages éventuels du
+   composant, inchangée. */
+.grains-cafe-deco {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin: 0.1rem 0 1.1rem;
+}
+
+.grains-cafe-deco svg {
+  width: 20px;
+  height: 30px;
+  flex-shrink: 0;
 }
 
 .progression-globale a {
@@ -1098,6 +1198,62 @@ button:disabled {
   font-size: 0.85rem;
   color: var(--fg-muted);
   margin-bottom: 1.5rem;
+}
+
+/* --- Section "Passer à la pratique" (intro modules + stats) --- */
+
+.accueil-pratique {
+  padding: 2.4rem 0 1.8rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Frise en ligne (même registre que .familles-legende) plutôt que 4 cartes chiffrées isolées —
+   ce sont des repères de progression, pas des blocs de contenu à part entière. */
+.stats-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 1.3rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 1.5rem 0 0;
+  margin-right: 1.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.stat-item:last-child {
+  border-right: none;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.stat-item-chiffre {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.stat-item-label {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+}
+
+.stat-item-label a {
+  color: inherit;
+}
+
+@media (max-width: 640px) {
+  .stat-item {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+    flex: 1 1 40%;
+  }
 }
 
 .modules-grille {
@@ -1145,8 +1301,55 @@ button:disabled {
   border-top-color: #c2437e;
 }
 
+/* La carte "Commence ici" (Parcours) se distingue par un fond teinté plutôt qu'un simple badge
+   flottant — plus visible dans une grille de 16 cartes qu'un petit encart en haut à droite. */
+.module-carte-recommande {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.module-carte-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.module-icone-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: var(--bg);
+}
+
+.module-carte-pratiquer .module-icone-badge {
+  background: var(--accent-soft);
+}
+
+.module-carte-ressources .module-icone-badge {
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.module-carte-avis .module-icone-badge {
+  background: color-mix(in srgb, #c2437e 18%, transparent);
+}
+
 .module-icone {
-  font-size: 2rem;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.module-duree {
+  font-size: 0.72rem;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
 }
 
 .module-carte h3 {
@@ -1169,6 +1372,405 @@ button:disabled {
   font-weight: 600;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
+}
+
+/* --- Section pédagogique + cas d'usage sectoriels (Accueil) --- */
+/* Registre plus sobre/institutionnel que le reste de l'Accueil (grille de modules colorée) —
+   hiérarchie éditoriale claire, icônes "carnet de croquis" en lieu d'emoji, à la manière d'une
+   page de vulgarisation universitaire plutôt que d'un tableau de bord applicatif. */
+.accueil-pedagogie,
+.accueil-secteurs {
+  padding: 2.4rem 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Bloc "manifeste" volontairement distinct des sections en simple texte-sur-fond — fond teinté +
+   large filet gauche, pour porter une prise de position plutôt que du contenu de référence, et
+   apporter une rupture visuelle dans la page (registre "citation éditoriale"). */
+.accueil-conviction {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px 14px 14px 4px;
+  padding: 1.8rem 2rem;
+  margin: 2.4rem 0;
+}
+
+.conviction-icone {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 0.2rem;
+}
+
+.conviction-corps p {
+  margin: 0 0 1rem;
+  color: var(--fg);
+  max-width: 70ch;
+}
+
+.conviction-corps .accueil-eyebrow {
+  margin-bottom: 0.6rem;
+}
+
+.conviction-corps .section-titre {
+  margin-bottom: 1rem;
+}
+
+.conviction-sources {
+  font-size: 0.78rem;
+  color: var(--fg-muted) !important;
+  margin-bottom: 0 !important;
+}
+
+.conviction-sources a {
+  color: var(--fg-muted);
+}
+
+.conviction-sources a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .accueil-conviction {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+}
+
+.section-titre {
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.3rem;
+  text-wrap: balance;
+  max-width: 32ch;
+}
+
+.pedagogie-definition {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.6rem;
+  margin-bottom: 1.8rem;
+}
+
+.pedagogie-icone-principale {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.pedagogie-definition p {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--fg-muted);
+}
+
+@media (max-width: 640px) {
+  .pedagogie-definition {
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+}
+
+.sketch-icone {
+  width: 40px;
+  height: 40px;
+  color: var(--fg);
+}
+
+/* Frise inline (pas des cartes) : les 4 familles se lisent comme une légende de schéma
+   directement rattachée au paragraphe de définition, plutôt que comme une 5e grille de blocs
+   empilée sur la page — corrige un effet "mur de cartes" signalé en conditions réelles. */
+.familles-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 1.4rem;
+}
+
+.famille-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 1 1 220px;
+  padding: 0.4rem 1.3rem;
+  border-left: 1px solid var(--border);
+}
+
+.famille-item:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.famille-item .sketch-icone {
+  color: var(--accent);
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.famille-item h4 {
+  margin: 0 0 0.15rem;
+  font-size: 0.92rem;
+}
+
+.famille-item p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .famille-item {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 0.9rem 0;
+  }
+  .famille-item:first-child {
+    border-top: none;
+  }
+}
+
+/* Liste éditoriale (un seul panneau, des lignes) plutôt qu'une grille de 11 cartes flottantes —
+   se lit comme un index/sommaire, cohérent avec le registre institutionnel visé pour cette
+   section, et laisse la grille de modules ci-dessous seule à porter ce langage visuel. */
+.secteurs-liste {
+  margin-top: 1.6rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.secteur-bloc {
+  border-bottom: 1px solid var(--border);
+}
+
+.secteur-bloc:last-child {
+  border-bottom: none;
+}
+
+.secteur-bloc.ouvert {
+  background: var(--accent-soft);
+}
+
+.secteur-ligne {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.3rem;
+  text-decoration: none;
+  color: var(--fg);
+  background: transparent;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.secteur-bloc:not(.ouvert) .secteur-ligne:hover {
+  background: var(--accent-soft);
+}
+
+.secteur-ligne-icone {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  color: var(--fg-muted);
+}
+
+.secteur-ligne-corps {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.secteur-ligne-corps h4 {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+}
+
+.secteur-ligne-corps p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secteur-ligne-compteur {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .secteur-ligne-corps p {
+    white-space: normal;
+  }
+  .secteur-ligne-compteur {
+    display: none;
+  }
+}
+
+/* Récit déplié : réutilise .metier-cas/.metier-lien (déjà définis pour la page Métiers) pour un
+   rendu identique à la fiche complète, plutôt qu'un style parallèle à maintenir en double. */
+.secteur-recit {
+  padding: 0 1.3rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.secteur-recit-metier + .secteur-recit-metier {
+  margin-top: 0.4rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
+.secteur-recit-chapo {
+  margin: 0 0 0.7rem;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+}
+
+.secteur-recit-chapo strong {
+  color: var(--fg);
+}
+
+.secteur-recit-plus {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.secteur-recit-plus:hover {
+  text-decoration: underline;
+}
+
+/* --- Chasseur de mission (dashboard agent) --- */
+.mission-recherche-panneau {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  margin: 1.4rem 0;
+}
+
+.mission-recherche-panneau h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+
+.mission-recherche-champs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+}
+
+.mission-recherche-champs input[type='text'] {
+  flex: 1 1 260px;
+}
+
+.mission-recherche-champs input[type='password'] {
+  flex: 0 1 180px;
+}
+
+.mission-recherche-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.mission-graphiques-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+  margin: 1.6rem 0;
+}
+
+.mission-graphique {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+}
+
+.mission-graphique h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+  color: var(--fg-muted);
+}
+
+.mission-note-historique {
+  margin-top: -0.6rem;
+}
+
+.mission-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-alt);
+}
+
+.mission-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 720px;
+}
+
+.mission-table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.mission-table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.mission-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mission-table tr:hover td {
+  background: var(--accent-soft);
+}
+
+.mission-table a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mission-table a:hover {
+  text-decoration: underline;
 }
 
 /* --- Exemples multiples (drawer modèle) --- */
@@ -1199,6 +1801,29 @@ button:disabled {
 
 .chip.actif {
   background: var(--accent-soft);
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.insta-musique-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.insta-musique-ecouter {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.insta-musique-ecouter:hover {
   color: var(--fg);
   border-color: var(--accent);
 }
@@ -2231,6 +2856,761 @@ button:disabled {
   font-weight: 600;
 }
 
+/* --- Publication Instagram (iaeasy → n8n → Instagram) --- */
+
+.insta-formulaire,
+.insta-succes {
+  max-width: 640px;
+}
+
+.insta-sujet {
+  width: 100%;
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.insta-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fg-muted);
+  margin: 0.4rem 0 0.5rem;
+}
+
+.insta-images-grille {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+}
+
+@media (max-width: 500px) {
+  .insta-images-grille {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insta-image-carte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-alt);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem;
+  color: var(--fg);
+}
+
+.insta-image-carte:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.insta-image-carte.actif {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.insta-image-carte img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #0a0a0a;
+}
+
+.insta-image-alea {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  background: var(--bg);
+  border-radius: 8px;
+}
+
+.insta-image-carte span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.insta-succes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.insta-succes code {
+  background: var(--bg);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+
+.insta-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.insta-entete-boutons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.insta-historique-bouton {
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.insta-historique-bouton.actif {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.insta-planification-ligne {
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+  margin-top: 0.3rem;
+}
+
+.insta-planification-ligne input[type='datetime-local'] {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--fg);
+}
+
+.insta-historique {
+  max-width: 640px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.insta-dashboard {
+  max-width: 720px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 0.5rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.insta-dashboard-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+
+.insta-dashboard-bloc {
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.insta-dashboard-bloc-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.insta-tendance-barres {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 90px;
+  padding-top: 0.5rem;
+}
+
+.insta-tendance-barre-colonne {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 0.3rem;
+}
+
+.insta-tendance-barre {
+  width: 100%;
+  min-height: 3px;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+}
+
+.insta-tendance-label {
+  font-size: 0.68rem;
+}
+
+.insta-dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.insta-dashboard-table th,
+.insta-dashboard-table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.insta-dashboard-table th {
+  color: var(--muted, var(--fg));
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.insta-historique-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.insta-commentaires-liste {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+}
+
+.insta-commentaire-item strong {
+  color: var(--accent);
+}
+
+.insta-reponse-dm {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  align-items: flex-end;
+}
+
+.insta-reponse-dm textarea {
+  flex: 1;
+  resize: vertical;
+}
+
+.insta-lien-bio-copie {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.insta-lien-bio-copie code {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.insta-historique-item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.insta-historique-item:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.insta-statut-pastille {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+}
+
+.insta-statut-pastille.ok { background: var(--success); }
+.insta-statut-pastille.ko { background: var(--danger); }
+
+.insta-historique-corps {
+  min-width: 0;
+  flex: 1;
+}
+
+.insta-historique-ligne1 {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.insta-historique-ligne1 strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insta-secteurs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.insta-stats-ligne {
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.insta-tons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+@media (max-width: 600px) {
+  .insta-tons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Parcours de création — indicateur d'étapes (mobile + fixe) */
+.insta-etapes {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.insta-etape-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
+  cursor: pointer;
+  color: var(--fg-muted);
+}
+
+.insta-etape-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.insta-etape-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.insta-etape-item.actif .insta-etape-numero {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.insta-etape-item.fait .insta-etape-numero {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.insta-etape-item.actif .insta-etape-label {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.insta-etape-label {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.insta-etape-trait {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  min-width: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .insta-etape-label {
+    display: none;
+  }
+  .insta-etape-trait {
+    min-width: 0.4rem;
+  }
+}
+
+.insta-etape-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.insta-etape-nav > button:only-of-type {
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .insta-etape-nav {
+    flex-direction: column-reverse;
+  }
+  .insta-etape-nav > button {
+    width: 100%;
+  }
+}
+
+/* Aperçu du secteur ciblé — hashtags + estimation réelle (pas inventée) */
+.insta-apercu-secteur {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.insta-apercu-secteur-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.insta-hashtag-large {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.insta-hashtag-niche {
+  opacity: 0.85;
+}
+
+/* Effets de fond — vignettes avec aperçu visuel réel plutôt qu'un simple libellé */
+.insta-effet-apercu-grand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.insta-effet-apercu-grand img {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.insta-effets-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.5rem;
+}
+
+.insta-effet-vignette {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+.insta-effet-vignette img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.insta-effet-vignette span {
+  font-size: 0.68rem;
+  color: var(--fg-muted);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.insta-effet-vignette.actif {
+  border-color: var(--accent);
+}
+
+.insta-effet-vignette.actif img {
+  border-color: var(--accent);
+}
+
+.insta-ton-carte {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  text-align: left;
+  background: var(--bg-alt);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  color: var(--fg);
+}
+
+.insta-ton-carte:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.insta-ton-carte.actif {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.insta-ton-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.insta-ton-desc {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+}
+
+/* --- Aperçu (mockup Instagram) --- */
+
+.insta-apercu {
+  max-width: 420px;
+}
+
+.insta-mockup {
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0.6rem 0 1rem;
+}
+
+.insta-mockup-story {
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.insta-mockup-image.insta-mockup-story-image {
+  aspect-ratio: 9 / 16;
+}
+
+.insta-mockup-entete {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.insta-mockup-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c6a04a, #6b5326);
+  flex-shrink: 0;
+}
+
+.insta-mockup-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.insta-mockup-legende {
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding: 0.8rem 0.9rem 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.insta-carrousel-galerie {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.6rem;
+  scroll-snap-type: x mandatory;
+}
+
+.insta-carrousel-slide {
+  flex: 0 0 78%;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.insta-carrousel-slide img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #0a0a0a;
+}
+
+.insta-carrousel-slide img.insta-mockup-story-image {
+  aspect-ratio: 9 / 16;
+}
+
+.insta-apercu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* --- Brief IA (LangGraph + Vertex AI) --- */
+
+.page-brief-ia {
+  max-width: 760px;
+}
+
+.brief-ia-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 1.2rem 0;
+}
+
+.brief-ia-etape {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  animation: assistant-msg-apparait 0.25s ease-out;
+}
+
+.brief-ia-etape-attente {
+  border-left-color: var(--fg-muted);
+  color: var(--fg-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+.brief-ia-etape-libelle {
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 0.4rem;
+}
+
+.brief-ia-etape-detail {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.86rem;
+  color: var(--fg-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.brief-ia-avertissement {
+  color: var(--danger);
+}
+
+.brief-ia-final,
+.brief-ia-validation {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+  margin-top: 1rem;
+}
+
+.brief-ia-final h3,
+.brief-ia-validation h3 {
+  margin-top: 0;
+}
+
+.brief-ia-final p {
+  font-size: 0.9rem;
+  margin: 0.4rem 0;
+}
+
+.brief-ia-validation-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+}
+
+.brief-ia-validation textarea {
+  width: 100%;
+  min-height: 80px;
+  margin-bottom: 0.6rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
 /* ============================================================
    Théâtre de l'Histoire — deux personnages, décors animés
    ============================================================ */
@@ -2521,10 +3901,10 @@ button:disabled {
   filter: drop-shadow(0 0 14px rgba(255, 216, 115, 0.55)) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
 }
 
-.personnage:not(:has(.personnage-parle)) .personnage-svg {
-  opacity: 0.8;
-  filter: grayscale(0.25) brightness(0.9);
-}
+/* Le retrait du grayscale seul n'a pas suffi (toujours signalé "bouche grise" en conditions
+   réelles) : même un léger brightness(0.92) assombrissait une couleur de bouche déjà sombre au
+   point de la lire comme grise. Le glow + le scale sur celui qui parle suffisent à distinguer
+   qui parle — le personnage au repos garde maintenant ses couleurs intactes. */
 
 /* Bouche pendant la parole : 3 formes DISTINCTES (fermée / mi-ouverte / grande ouverte) qui
    alternent par coupures nettes, plutôt qu'un seul cercle qui grossit et rétrécit — signalé en
@@ -2634,23 +4014,20 @@ button:disabled {
 }
 
 /* --- Boîte de dialogue --- */
-
+/* Sortie du cadre visuel (scène) : un bloc normal juste en dessous, plutôt qu'un overlay
+   semi-transparent posé sur le décor/les personnages — demandé en conditions réelles, la
+   superposition gênait la lecture. */
 .theatre-dialogue {
-  position: absolute;
-  left: 5%;
-  right: 5%;
-  bottom: 3%;
-  background: rgba(15, 17, 21, 0.72);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 1rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.9rem 1.2rem 1.1rem;
-  z-index: 3;
   min-height: 92px;
 }
 
 .theatre-dialogue-nom {
-  color: #ffd873;
+  color: var(--accent);
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: 0.03em;
@@ -2658,7 +4035,7 @@ button:disabled {
 }
 
 .theatre-dialogue-texte {
-  color: #f4f2ec;
+  color: var(--fg);
   font-size: 1.02rem;
   line-height: 1.5;
   margin: 0;
@@ -2671,7 +4048,7 @@ button:disabled {
   justify-content: center;
   text-align: center;
   font-style: italic;
-  color: #f4f2ec;
+  color: var(--fg);
 }
 
 .theatre-controles {
@@ -2709,4 +4086,246 @@ button:disabled {
     color: var(--fg);
     border-color: var(--border);
   }
+}
+
+/* ============================================================
+   Le Voyage de l'IA — récit + petits schémas animés, réutilise
+   le moteur du Théâtre (personnages, décors, voix Piper)
+   ============================================================ */
+
+.voyage-nav-chapitres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.8rem 0 1.2rem;
+}
+
+.voyage-chapitre-chip {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+}
+
+.voyage-chapitre-chip.actif {
+  background: var(--accent-soft);
+  color: var(--fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.voyage-chapitre-chip.termine::before {
+  content: '✓ ';
+}
+
+.voyage-progression {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+
+.voyage-schema-bloc {
+  margin-top: 1rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.voyage-schema-titre {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  margin: 0 0 0.6rem;
+}
+
+/* Apparition échelonnée de chaque étape du schéma (opacity 0 initial, l'animation la révèle
+   avec un délai croissant via animationDelay inline) — répond à la demande explicite
+   "il faut que ce soit animé" pour les schémas, pas seulement pour les personnages. */
+.schema-etape-groupe {
+  display: contents;
+}
+
+.schema-etape-anime,
+.schema-fleche-anime {
+  opacity: 0;
+  animation: schema-etape-apparait 0.5s ease-out forwards;
+}
+
+@keyframes schema-etape-apparait {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.voyage-fin {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.voyage-fin button {
+  margin-top: 0.8rem;
+}
+
+/* ============================================================
+   Lot 1 — progression persistante, favoris, mon parcours, quiz éclair
+   ============================================================ */
+
+.favori-etoile {
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.favori-etoile.actif {
+  color: var(--accent);
+}
+
+.favori-etoile:hover {
+  color: var(--accent);
+}
+
+.model-card-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.drawer-titre-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.drawer-titre-ligne h2 {
+  margin: 0;
+}
+
+.glossaire-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.glossaire-barre .glossaire-recherche {
+  margin-bottom: 0;
+}
+
+.glossaire-carte-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.glossaire-carte-tete h4 {
+  margin: 0;
+}
+
+/* --- Barre de progression persistante (header) --- */
+
+.progression-pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-decoration: none;
+  margin-left: 0.6rem;
+}
+
+.progression-pastille:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+.progression-pastille-badges {
+  color: var(--fg-muted);
+}
+
+@media (max-width: 780px) {
+  .progression-pastille {
+    margin-left: 0;
+    order: 9;
+  }
+}
+
+/* --- Mon parcours --- */
+
+.parcours-perso-liste {
+  list-style: none;
+  margin: 0 0 1.2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.parcours-perso-item {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+}
+
+.parcours-perso-icone {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.parcours-perso-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.parcours-perso-ligne1 {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+}
+
+.parcours-perso-effacer {
+  background: var(--bg-alt);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+
+/* --- Quiz éclair --- */
+
+.quiz-eclair-question {
+  margin-bottom: 1.2rem;
+}
+
+.quiz-eclair-source {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  margin-bottom: 0.2rem;
 }

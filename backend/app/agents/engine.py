@@ -124,10 +124,18 @@ async def _handler_rag(config: dict, contexte: dict, etapes: list[dict]) -> dict
     requete = _texte_borne(config.get("prompt") or contexte.get("prompt"), "Qu'est-ce que MCP ?")
     vecteur_requete = await ollama.embed(MODELE_EMBED, requete)
 
-    corpus = list(_MINI_CORPUS_RAG)
+    # Quand un document d'entreprise est fourni (cas btp/banque/agriculture... de bricks.py), la
+    # démo porte sur CE document précis — il ne doit jamais avoir à concurrencer le corpus
+    # pédagogique générique (_MINI_CORPUS_RAG, des phrases sur RAG/MCP/ReAct/Isolation Forest,
+    # sans rapport avec la question posée). Les mélanger faisait gagner un passage hors sujet par
+    # similarité cosinus (signalé en conditions réelles : question sur une garantie décennale,
+    # passage retrouvé sur l'entraînement d'un Isolation Forest). Sans document fourni, on retombe
+    # sur le corpus générique pour l'exploration libre (pas de cas d'usage ciblé).
     document_utilisateur = config.get("document_utilisateur")
     if isinstance(document_utilisateur, str) and document_utilisateur.strip():
-        corpus.append(document_utilisateur[:_LONGUEUR_MAX_TEXTE])
+        corpus = [document_utilisateur[:_LONGUEUR_MAX_TEXTE]]
+    else:
+        corpus = list(_MINI_CORPUS_RAG)
 
     meilleur_passage, meilleur_score = corpus[0], -1.0
     for passage in corpus:
@@ -162,7 +170,12 @@ async def _handler_outil_mcp(config: dict, contexte: dict, etapes: list[dict]) -
         )
         contexte["resultat_outil"] = resultat
     else:
-        requete = _texte_borne(config.get("prompt") or contexte.get("prompt"), "MCP")
+        # "requete" est le nom du champ déclaré par le schéma JSON de l'outil MCP "rechercher"
+        # (voir bricks.py) — lire "prompt" ici (comme avant) faisait chercher dans le corpus le
+        # texte de la DERNIÈRE expression calculatrice encore présente côté frontend, jamais une
+        # vraie requête de recherche (signalé en conditions réelles : sélectionner "Recherche
+        # documentaire" gardait "45 * 3.5 + 45 * 2.25" affiché et envoyé tel quel).
+        requete = _texte_borne(config.get("requete") or contexte.get("prompt"), "MCP")
         resultat = tools.recherche_mini_corpus(requete)
         etapes.append(
             {

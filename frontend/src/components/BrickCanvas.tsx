@@ -55,7 +55,7 @@ function styleArete(condition: Condition) {
   return { ...OPTIONS_ARETE, data: { condition: undefined } }
 }
 
-const CLE_APERCU = ['prompt', 'texte', 'expression']
+const CLE_APERCU = ['prompt', 'texte', 'requete', 'expression']
 
 function apercuConfig(config: Record<string, unknown>): string {
   for (const cle of CLE_APERCU) {

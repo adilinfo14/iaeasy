@@ -1,21 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { enregistrerVisite } from './api/client'
+import { enregistrerVisite, lireBadges, lireProgression, listerBriques } from './api/client'
 import AssistantAide from './components/AssistantAide'
 import Accueil from './pages/Accueil'
 import AdminReglages from './pages/AdminReglages'
 import Avis from './pages/Avis'
+import BriefIA from './pages/BriefIA'
 import Catalogue from './pages/Catalogue'
+import ChasseurMission from './pages/ChasseurMission'
 import Constructeur from './pages/Constructeur'
 import Entrainement from './pages/Entrainement'
 import Glossaire from './pages/Glossaire'
+import Instagram from './pages/Instagram'
 import Metiers from './pages/Metiers'
+import MonParcours from './pages/MonParcours'
 import Parcours from './pages/Parcours'
+import QuizEclair from './pages/QuizEclair'
 import Securite from './pages/Securite'
 import Simulateur from './pages/Simulateur'
 import StrategieTest from './pages/StrategieTest'
 import Theatre from './pages/Theatre'
 import Videos from './pages/Videos'
+import Voyage from './pages/Voyage'
 
 const GROUPES_MENU = [
   {
@@ -27,6 +33,7 @@ const GROUPES_MENU = [
       { to: '/parcours', label: 'Parcours' },
       { to: '/constructeur', label: 'Constructeur' },
       { to: '/simulateur', label: 'Simulateur' },
+      { to: '/brief-ia', label: 'Brief IA' },
     ],
   },
   {
@@ -39,7 +46,15 @@ const GROUPES_MENU = [
       { to: '/metiers', label: 'Mon métier' },
       { to: '/videos', label: 'Vidéos' },
       { to: '/theatre', label: 'Théâtre' },
+      { to: '/voyage', label: "Voyage de l'IA" },
+      { to: '/quiz-eclair', label: 'Quiz éclair' },
+      { to: '/mon-parcours', label: 'Mon parcours' },
     ],
+  },
+  {
+    id: 'agents',
+    label: 'Agents',
+    liens: [{ to: '/agents/chasseur-mission', label: 'Chasseur de mission' }],
   },
 ]
 
@@ -66,9 +81,16 @@ export default function App() {
   const [dropdownOuvert, setDropdownOuvert] = useState<string | null>(null)
   const location = useLocation()
   const navRef = useRef<HTMLElement>(null)
+  const [progression, setProgression] = useState<{ debloquees: number; total: number; badges: number } | null>(null)
 
   useEffect(() => {
     enregistrerVisite()
+    // Repris une fois au chargement plutôt qu'à chaque navigation : la progression n'évolue
+    // qu'après une action explicite (essayer une brique) déjà suivie côté page concernée — pas
+    // besoin de la revérifier à chaque clic dans le menu.
+    Promise.all([listerBriques(), lireProgression(), lireBadges()]).then(([briques, p, b]) => {
+      setProgression({ debloquees: p.debloquees.length, total: briques.length, badges: b.badges.length })
+    })
   }, [])
 
   // Referme le menu mobile et les sous-menus dès qu'on navigue vers une nouvelle page (clic
@@ -133,6 +155,12 @@ export default function App() {
           })}
           <NavLink to="/avis">Avis</NavLink>
         </nav>
+        {progression && progression.total > 0 && (
+          <NavLink to="/parcours" className="progression-pastille" title="Voir le Parcours">
+            🧱 {progression.debloquees}/{progression.total}
+            {progression.badges > 0 && <span className="progression-pastille-badges"> · 🏅 {progression.badges}</span>}
+          </NavLink>
+        )}
         <button
           className="theme-toggle"
           onClick={() => setTheme(theme === 'doux' ? 'sombre' : 'doux')}
@@ -149,6 +177,7 @@ export default function App() {
           <Route path="/entrainement" element={<Entrainement />} />
           <Route path="/parcours" element={<Parcours />} />
           <Route path="/constructeur" element={<Constructeur />} />
+          <Route path="/brief-ia" element={<BriefIA />} />
           <Route path="/strategie-test" element={<StrategieTest />} />
           <Route path="/securite" element={<Securite />} />
           <Route path="/glossaire" element={<Glossaire />} />
@@ -156,8 +185,13 @@ export default function App() {
           <Route path="/simulateur" element={<Simulateur />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/theatre" element={<Theatre />} />
+          <Route path="/voyage" element={<Voyage />} />
+          <Route path="/quiz-eclair" element={<QuizEclair />} />
+          <Route path="/mon-parcours" element={<MonParcours />} />
           <Route path="/avis" element={<Avis />} />
           <Route path="/admin" element={<AdminReglages />} />
+          <Route path="/instagram" element={<Instagram />} />
+          <Route path="/agents/chasseur-mission" element={<ChasseurMission />} />
         </Routes>
       </main>
       <AssistantAide />

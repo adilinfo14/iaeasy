@@ -25,7 +25,7 @@ STRATEGIES = [
                     'toujours vérifier séparément les faits vérifiables (calculs, dates, chiffres).',
   'cahier_exemple': [{'cas': 'Calcul en plusieurs étapes',
                       'entree': 'Facture de 3h30 à 45€/h + 2h15 à 45€/h, total ?',
-                      'attendu': '247,50 €',
+                      'attendu': '258,75 €',
                       'constat': 'À vérifier à la calculette : les LLM se trompent souvent sur les calculs en '
                                  'plusieurs étapes.'},
                      {'cas': 'Fait vérifiable',
@@ -176,7 +176,7 @@ STRATEGIES = [
                       'entree': "Trois formulations : 'Facture 3h30 à 45€/h + 2h15 à 45€/h, total ?', 'ct koi le "
                                 "total si 3h30 + 2h15 a 45 euro d lheure', 'Pourriez-vous calculer le montant total "
                                 "pour 3h30 et 2h15 de main d'œuvre au tarif horaire de 45 euros ?'",
-                      'attendu': '247,50 € dans les trois cas.',
+                      'attendu': '258,75 € dans les trois cas.',
                       'constat': 'Le calcul reste correct dans les versions soignées, mais la version fautive fait '
                                  "parfois basculer le modèle sur une erreur d'arrondi des minutes en heures "
                                  'décimales.'},

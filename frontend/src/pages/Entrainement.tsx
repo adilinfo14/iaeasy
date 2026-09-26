@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   apercuDonnees,
   demarrerEntrainement,
@@ -23,6 +23,7 @@ export default function Entrainement() {
   const [apres, setApres] = useState<any[] | null>(null)
   const [testEntree, setTestEntree] = useState('')
   const [testResultat, setTestResultat] = useState<any>(null)
+  const scenarioIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     listerScenariosEntrainement().then((s) => {
@@ -32,6 +33,7 @@ export default function Entrainement() {
   }, [])
 
   async function choisirScenario(id: string) {
+    scenarioIdRef.current = id
     setScenarioId(id)
     setHistorique([])
     setStatut('inactif')
@@ -39,8 +41,13 @@ export default function Entrainement() {
     setJobId(null)
     setAvant(null)
     setApres(null)
+    setTestEntree('')
     setTestResultat(null)
-    setApercu(await apercuDonnees(id))
+    // Un clic rapide vers un autre scénario avant la fin de cet appel ne doit pas faire
+    // apparaître l'aperçu de données du PREMIER scénario sous le titre du second (signalé en
+    // audit) — on ignore la réponse si l'utilisateur a déjà changé de scénario entre-temps.
+    const donnees = await apercuDonnees(id)
+    setApercu((actuel: any) => (id === scenarioIdRef.current ? donnees : actuel))
   }
 
   async function lancer() {

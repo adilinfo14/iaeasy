@@ -236,3 +236,99 @@ def _clustering_sync() -> dict:
 
 async def run_clustering() -> dict:
     return await asyncio.to_thread(_clustering_sync)
+
+
+def _toy_dossiers_auto():
+    # n=200 (au lieu de 60) et seuils moins stricts : avec seulement 60 dossiers et des seuils
+    # sévères, la classe "à risque" ne comptait que 4 exemples — trop peu pour que la régression
+    # apprenne une frontière fiable (coefficients quasi nuls ou mal orientés, constaté en test
+    # réel). Ce jeu élargi donne une séparation nette et des coefficients correctement orientés.
+    rng = np.random.RandomState(31)
+    n = 200
+    age_conducteur = rng.normal(38, 14, n).clip(18, 75)
+    anciennete_permis = (age_conducteur - 18 - rng.uniform(0, 3, n)).clip(0, 55)
+    nb_sinistres_3ans = rng.poisson(0.6, n)
+    risque = (
+        (age_conducteur < 28).astype(int) + (nb_sinistres_3ans >= 1).astype(int) + (anciennete_permis < 6).astype(int)
+        >= 2
+    ).astype(int)
+    return age_conducteur, anciennete_permis, nb_sinistres_3ans, risque
+
+
+def _scoring_auto_sync() -> dict:
+    from sklearn.linear_model import LogisticRegression
+
+    age, anciennete, sinistres, risque = _toy_dossiers_auto()
+    X = np.column_stack([age, anciennete, sinistres])
+    modele = LogisticRegression()
+    modele.fit(X, risque)
+
+    profil_teste = {"age_conducteur": 21, "anciennete_permis_annees": 2, "nb_sinistres_3ans": 1}
+    nouveau = np.array(
+        [[profil_teste["age_conducteur"], profil_teste["anciennete_permis_annees"], profil_teste["nb_sinistres_3ans"]]]
+    )
+    proba_risque = float(modele.predict_proba(nouveau)[0][1])
+
+    return {
+        "type": "scoring_assurance_auto",
+        "nb_profils_entrainement": len(risque),
+        "nb_profils_a_risque": int(risque.sum()),
+        "profil_teste": profil_teste,
+        "probabilite_risque": round(proba_risque, 3),
+        "decision_suggeree": "Surprime / étude approfondie" if proba_risque > 0.5 else "Tarif standard",
+        "explication": "Modèle (régression logistique) entraîné en direct sur 60 profils jouets — "
+        "variables utilisées : âge du conducteur, ancienneté du permis, nombre de sinistres "
+        "responsables sur 3 ans. Même technique que le scoring crédit, appliquée à la tarification "
+        "auto plutôt qu'au risque bancaire.",
+    }
+
+
+async def run_scoring_auto() -> dict:
+    return await asyncio.to_thread(_scoring_auto_sync)
+
+
+def _toy_dossiers_sante():
+    # Mêmes ajustements que le scoring auto (n=200, seuils moins stricts) : la version initiale
+    # ne comptait que 2 dossiers "à risque" sur 60, insuffisant pour un apprentissage fiable.
+    rng = np.random.RandomState(37)
+    n = 200
+    age = rng.normal(45, 17, n).clip(18, 85)
+    nb_consultations_an = rng.poisson(3, n)
+    hospitalisation_recente = rng.binomial(1, 0.15, n)
+    surrisque = (
+        (age > 55).astype(int) + (nb_consultations_an >= 5).astype(int) + hospitalisation_recente >= 2
+    ).astype(int)
+    return age, nb_consultations_an, hospitalisation_recente, surrisque
+
+
+def _scoring_sante_sync() -> dict:
+    from sklearn.linear_model import LogisticRegression
+
+    age, consultations, hospit, surrisque = _toy_dossiers_sante()
+    X = np.column_stack([age, consultations, hospit])
+    modele = LogisticRegression()
+    modele.fit(X, surrisque)
+
+    profil_teste = {"age": 67, "nb_consultations_an": 7, "hospitalisation_recente": 1}
+    nouveau = np.array(
+        [[profil_teste["age"], profil_teste["nb_consultations_an"], profil_teste["hospitalisation_recente"]]]
+    )
+    proba_surrisque = float(modele.predict_proba(nouveau)[0][1])
+
+    return {
+        "type": "scoring_assurance_sante",
+        "nb_profils_entrainement": len(surrisque),
+        "nb_profils_a_risque": int(surrisque.sum()),
+        "profil_teste": profil_teste,
+        "probabilite_risque": round(proba_surrisque, 3),
+        "decision_suggeree": "Surprime / questionnaire médical complémentaire" if proba_surrisque > 0.5 else "Tarif standard",
+        "explication": "Modèle (régression logistique) entraîné en direct sur 60 profils jouets — "
+        "variables utilisées : âge, nombre de consultations dans l'année, hospitalisation récente. "
+        "Un vrai contrat de complémentaire santé mobiliserait bien plus de variables et un encadrement "
+        "réglementaire strict (non-discrimination) ; ceci reste une démonstration pédagogique du "
+        "mécanisme, pas un outil de tarification réel.",
+    }
+
+
+async def run_scoring_sante() -> dict:
+    return await asyncio.to_thread(_scoring_sante_sync)
